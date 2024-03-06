@@ -34,6 +34,6 @@ for index, row in edges_df.iterrows():
         foot=row['foot']
     )
 
-prob = problem.shortestPathProblem(networkMap)
+prob = problem.ShortestPathProblem(networkMap)
 
 prob.displayMap()
