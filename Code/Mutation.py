@@ -1,4 +1,7 @@
-# Mutations
+"""
+This File contains all the mutations we could find that could work for our optimisation problem so that we can find, which mutation will give us
+the optimal result.
+"""
 import numpy as np
 import random
 
