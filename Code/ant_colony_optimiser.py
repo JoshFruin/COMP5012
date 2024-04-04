@@ -78,18 +78,28 @@ class AntColony:
         """
         neighbors = self.graph.neighbors(ant['current_node'])  # Get current node and look at neighboring nodes
         unvisited = [node for node in neighbors if
-                     node not in ant['visited']]  # Create list of unvisited neighboring nodes
+                     node not in ant['visited']]  # Create list of unvisited potential next neighboring nodes
 
         probabilities = {}  # Initialize probability dictionary
         total_prob = 0  # Initialize variable (should end up as 1)
 
         for node in unvisited:  # Loop through unvisited nodes
-            edge_data = self.graph.get_edge_data(ant['current_node'],
-                                                 node)  # Get edge data between current node and target unvisited node
+            edge_data = self.graph.get_edge_data(ant['current_node'], node)  # Get edge data between current node and
+            # target unvisited node
+            print(edge_data)
             distance = edge_data.get('length', 1)  # Default to 1 if no data is available
             speed_limit = edge_data.get('car', 0)  # We need to change these to equal our CSV column names
 
             # Heuristics
+            # still need to code in what happens when the speedlimit is 0, then it divides by 1
+            # need to make sure that if the speedlimit is 0 the edge is inaccessible
+            if speed_limit > 0:
+
+            else:
+                # something
+            # make sure the path isnt chosen
+            # could add to a list of available paths and then only choose from the available ones
+
             time = distance / speed_limit if speed_limit > 0 else 0  # Calculate time
             heuristic = (1 / distance) * self.distance_weight + (
                     1 / time) * self.time_weight  # Create heuristic to guide ants

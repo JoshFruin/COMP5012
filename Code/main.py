@@ -11,8 +11,8 @@ nodes_df = pd.read_csv("nodes_l.csv")
 edges_df = pd.read_csv("edges_l.csv")
 
 # print the data to test
-print(nodes_df)
-print(edges_df)
+print(nodes_df.dtypes)
+print(edges_df.dtypes)
 
 ##### Test Graph ####
 
@@ -30,9 +30,9 @@ for index, row in nodes_df.iterrows():
 
 for index, row in edges_df.iterrows():
     networkMap.add_edge(
-        # row['edge_id'],
         row['source'],  # source node id
         row['target'],  # target node id
+        edge_id=row['edge_id'],
         length=row['length'],
         car=row['car'],
         car_reverse=row['car_reverse'],
@@ -43,7 +43,7 @@ for index, row in edges_df.iterrows():
 
 # create and set objects
 prob = problem.ShortestPathProblem(networkMap)
-prob.displayMap()
+# prob.displayMap()
 archive = Archive()
 optimiser = AntColony(graph=networkMap, num_ants=100)
 
@@ -51,7 +51,7 @@ optimiser = AntColony(graph=networkMap, num_ants=100)
 progress_results = []
 
 iterations = 10
-sourceNode = 65282506
+sourceNode = 440853802
 targetNode = 338898805
 
 for i in range(iterations):
