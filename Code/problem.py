@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import networkx as nx
+import scipy as sp
 
 
 def speedSwitcher(choice):
@@ -53,6 +54,3 @@ class ShortestPathProblem:
             totalTime += time
 
         return {"Distance": totalDist, "Time": totalTime}
-
-    def dominance(self, u, v):
-        return (u <= v).all() and (u < v).any()
