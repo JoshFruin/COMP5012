@@ -66,7 +66,7 @@ class AntColony:
             pheromones[(u, v)] = 1  # Start edge pheromone with a uniform base value of 1
         return pheromones  # Keep for now, perhaps not needed
 
-    def _select_next_node(self, ant):
+    def _select_next_node(self, ant, problem):
         """
         Select the next node for the ant to move to based on pheromone levels and heuristic information.
 
@@ -83,33 +83,37 @@ class AntColony:
         probabilities = {}  # Initialize probability dictionary
         total_prob = 0  # Initialize variable (should end up as 1)
 
-        for node in unvisited:  # Loop through unvisited nodes
-            edge_data = self.graph.get_edge_data(ant['current_node'], node)  # Get edge data between current node and
-            # target unvisited node
-            print(edge_data)
-            distance = edge_data.get('length', 1)  # Default to 1 if no data is available
-            speed_limit = edge_data.get('car', 0)  # We need to change these to equal our CSV column names
+        if len(unvisited) > 0:
+            for node in unvisited:  # Loop through unvisited nodes
 
-            # Heuristics
-            # still need to code in what happens when the speedlimit is 0, then it divides by 1
-            # need to make sure that if the speedlimit is 0 the edge is inaccessible
-            if speed_limit > 0:
+                edge_data = self.graph.get_edge_data(ant['current_node'],
+                                                     node)  # Get edge data between current node and
+                # target unvisited node
+                print(edge_data)
+                distance = edge_data.get('length', 0)  # Default to 1 if no data is available
+                speed_limit_key = edge_data.get('car', 0)  # We need to change these to equal our CSV column names
 
-            else:
-                # something
-            # make sure the path isnt chosen
-            # could add to a list of available paths and then only choose from the available ones
+                if speed_limit_key > 0 and distance > 0:
 
-            time = distance / speed_limit if speed_limit > 0 else 0  # Calculate time
-            heuristic = (1 / distance) * self.distance_weight + (
-                    1 / time) * self.time_weight  # Create heuristic to guide ants
+                    # Heuristics
+                    speed_limit = problem.speedSwitcher(speed_limit_key)
 
-            # Pheromone Influence
-            pheromone = self.pheromones.get((ant['current_node'], node), 1)
+                    time = distance / speed_limit if speed_limit > 0 else 0  # Calculate time
+                    heuristic = (1 / distance) * self.distance_weight + (
+                            1 / time) * self.time_weight  # Create heuristic to guide ants
 
-            probabilities[node] = ((pheromone ** self.alpha) * (
-                    heuristic ** self.beta))  # Probability of traveling to target node using pheromone importance and heuristic
-            total_prob += probabilities[node]  # Should be 1
+                    # Pheromone Influence
+                    pheromone = self.pheromones.get((ant['current_node'], node), 1)
+
+                    probabilities[node] = ((pheromone ** self.alpha) * (
+                            heuristic ** self.beta))  # Probability of traveling to target node using pheromone importance and heuristic
+                    total_prob += probabilities[node]  # Should be 1
+
+                else:
+                    continue # NEED TO COME UP WITH A BETTER IDEA HERE, THE ANTS ARE JUST TERMINATING
+
+        # else:
+        #   break
 
         # Probabilistic Selection
         if total_prob > 0:  # Check there are valid nodes to move to
@@ -117,8 +121,9 @@ class AntColony:
             node_weights = [probabilities[node] / total_prob for node in nodes]  # Normalized probabilities
             next_node = random.choices(nodes, weights=node_weights)[0]  # Random aspect to guided node choice
         else:
-            # If all probabilities were 0 (e.g., trapped ant), choose randomly
-            next_node = random.choice(unvisited)
+            # If all probabilities were 0 or all nodes inaccessible (e.g., trapped ant), choose randomly
+            # can we do this? It could choose an inaccessible node.
+            next_node = random.choice(neighbors)
 
         return next_node
 
@@ -137,15 +142,16 @@ class AntColony:
                'time': 0}  # Initialize list of visited nodes with the start node as it's been visited
 
         while ant['current_node'] != target_node:  # While ant has not reached the target node, it selects the next node
-            next_node = self._select_next_node(ant)  # Need the move_ant
-            self._move_ant(ant, next_node)
+            next_node = self._select_next_node(ant, problem)  # Need the move_ant
+            self._move_ant(ant, next_node, problem)
 
         # Final Evaluation Here:
         path = ant['visited']  # The complete path taken by the ant, nodes visited
+        print(path)
         result = problem.evaluate(path)  # Use your ShortestPathProblem class
         self.archive.add_solution(path, result)
 
-    def _move_ant(self, ant, next_node):
+    def _move_ant(self, ant, next_node, problem):
         """
         Move the ant to the next node and update its state.
 
@@ -153,16 +159,18 @@ class AntColony:
         - ant (dict): Ant's information including current node and visited nodes.
         - next_node: Next node to which the ant will move.
         """
-        ant['visited'].append(next_node)  # Adding next node to the visited
-        ant['current_node'] = next_node  # Updating the current node and attached variables
 
         # Update distance and time traveled
         edge_data = self.graph.get_edge_data(ant['current_node'], next_node)
         distance = edge_data.get('length', 0)  # Check variables with the CSV
         print("Hello")
-        speed_limit = edge_data.get('car', 0)  # Check variables with the CSV + use speed switcher
+        speed_limit_key = edge_data.get('car', 0)  # Check variables with the CSV + use speed switcher
+
+        speed_limit = problem.speedSwitcher(speed_limit_key)
         time = distance / speed_limit if speed_limit > 0 else 0
 
+        ant['visited'].append(next_node)  # Add next_node to the ant's visited list
+        ant['current_node'] = next_node  # Update the current node
         ant['distance'] += distance  # Updates distance and time for that specific ant
         ant['time'] += time
 

@@ -3,19 +3,6 @@ import networkx as nx
 import scipy as sp
 
 
-def speedSwitcher(choice):
-    switcher = {
-        0: 0,
-        1: 20,
-        2: 30,
-        3: 50,
-        4: 90,
-        5: 100,
-        6: 120,
-    }
-    return switcher.get(choice, "Invalid edge")
-
-
 class ShortestPathProblem:
 
     def __init__(self, problemMap):
@@ -29,6 +16,18 @@ class ShortestPathProblem:
         nx.draw(self.problemMap, positions, with_labels=True, node_size=300)
         print("Layout Calculated")
         plt.show()
+
+    def speedSwitcher(self, choice):
+        switcher = {
+            0: 0,
+            1: 20,
+            2: 30,
+            3: 50,
+            4: 90,
+            5: 100,
+            6: 120,
+        }
+        return switcher.get(choice, "Invalid edge")
 
     # evaluates the path/solution
     def evaluate(self, path):
@@ -47,7 +46,7 @@ class ShortestPathProblem:
             speedLimit = edgeData.get("car", 0)
 
             # speed is in the form of 0-6, use speedSwitcher to get actual edge speed
-            speed = speedSwitcher(speedLimit)
+            speed = self.speedSwitcher(speedLimit)
             time = distance / speedLimit if speedLimit > 0 else 0
 
             totalDist += distance

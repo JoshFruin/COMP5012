@@ -18,6 +18,7 @@ print(edges_df.dtypes)
 
 testGraph = nx.complete_graph(10)
 
+#######
 networkMap = nx.Graph()
 
 for index, row in nodes_df.iterrows():
