@@ -1,5 +1,4 @@
 # load necessary libraries
-import networkx
 import pandas as pd
 import networkx as nx
 import problem
@@ -14,11 +13,11 @@ edges_df = pd.read_csv("edges_l.csv")
 print(nodes_df.dtypes)
 print(edges_df.dtypes)
 
-##### Test Graph ####
+# ----------------------------    Test Graph
 
 testGraph = nx.complete_graph(10)
 
-#######
+# ------------------------
 networkMap = nx.Graph()
 
 for index, row in nodes_df.iterrows():

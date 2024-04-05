@@ -30,8 +30,8 @@ class AntColony:
         - graph: Graph representing the problem domain.
         - objective_function: Function to evaluate the quality of a solution.
         - num_ants (int): Number of ants in the colony (default is 10).
-        - alpha (float): Weight of pheromone in ant decision making (default is 1).
-        - beta (float): Weight of heuristic information in ant decision making (default is 2).
+        - alpha (float): Weight of pheromone in ant decision-making (default is 1).
+        - beta (float): Weight of heuristic information in ant decision-making (default is 2).
         - evaporation_rate (float): Rate at which pheromones evaporate (default is 0.5).
         """
         self.graph = graph
@@ -64,6 +64,8 @@ class AntColony:
         for edge in self.graph.edges:  # Iterates through all edges
             u, v = edge  # Set edge source and target IDs
             pheromones[(u, v)] = 1  # Start edge pheromone with a uniform base value of 1
+
+        print("Starting Pheromones initialised")
         return pheromones  # Keep for now, perhaps not needed
 
     def _select_next_node(self, ant, problem):
@@ -88,8 +90,9 @@ class AntColony:
 
                 edge_data = self.graph.get_edge_data(ant['current_node'],
                                                      node)  # Get edge data between current node and
+                # print(edge_data)
+
                 # target unvisited node
-                print(edge_data)
                 distance = edge_data.get('length', 0)  # Default to 1 if no data is available
                 speed_limit_key = edge_data.get('car', 0)  # We need to change these to equal our CSV column names
 
@@ -106,11 +109,12 @@ class AntColony:
                     pheromone = self.pheromones.get((ant['current_node'], node), 1)
 
                     probabilities[node] = ((pheromone ** self.alpha) * (
-                            heuristic ** self.beta))  # Probability of traveling to target node using pheromone importance and heuristic
+                            heuristic ** self.beta))  # Probability of traveling to target node using pheromone
+                    # importance and heuristic
                     total_prob += probabilities[node]  # Should be 1
 
                 else:
-                    continue # NEED TO COME UP WITH A BETTER IDEA HERE, THE ANTS ARE JUST TERMINATING
+                    continue  # NEED TO COME UP WITH A BETTER IDEA HERE, THE ANTS ARE JUST TERMINATING
 
         # else:
         #   break
@@ -123,7 +127,10 @@ class AntColony:
         else:
             # If all probabilities were 0 or all nodes inaccessible (e.g., trapped ant), choose randomly
             # can we do this? It could choose an inaccessible node.
-            next_node = random.choice(neighbors)
+
+            # convert neighbours into a list for the random.choice function
+            available_neighbors = list(neighbors)
+            next_node = random.choice(available_neighbors)
 
         return next_node
 
@@ -163,7 +170,6 @@ class AntColony:
         # Update distance and time traveled
         edge_data = self.graph.get_edge_data(ant['current_node'], next_node)
         distance = edge_data.get('length', 0)  # Check variables with the CSV
-        print("Hello")
         speed_limit_key = edge_data.get('car', 0)  # Check variables with the CSV + use speed switcher
 
         speed_limit = problem.speedSwitcher(speed_limit_key)
