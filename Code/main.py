@@ -2,8 +2,8 @@
 import pandas as pd
 import networkx as nx
 import problem
-from Code.ant_colony_optimiser import AntColony
-from Code.archive import Archive
+from ant_colony_optimiser import AntColony
+from archive import Archive
 
 # load san fransisco map data
 nodes_df = pd.read_csv("nodes_l.csv")
