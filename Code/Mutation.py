@@ -5,12 +5,13 @@ the optimal result.
 import numpy as np
 import random
 
-def random_selection_mutation(solution):
+def random_selection_mutation(solution, mutation_rate):
   """
   Performs random selection mutation on a solution path.
 
   Args:
       solution: A list representing the current solution path.
+      mutation_rate: Probability of applying mutation to the solution.
 
   Returns:
       A new list with the mutated solution path.

@@ -8,7 +8,7 @@ Created on Wed Mar 27 13:29:08 2024
 # Create the objective function
 objective_function = LengthTimeObjectiveFunction(ShortestPathProblem(networkMap))
 
-# Create the Ant Colony Optimization instance
+# Create the Ant Colony Optimization instance (using ant_colony_optimiser.py)
 aco = AntColony(networkMap, objective_function)
 
 # Run the optimization

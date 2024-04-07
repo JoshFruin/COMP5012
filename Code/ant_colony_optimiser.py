@@ -8,7 +8,74 @@ import random
 import archive
 
 
+<<<<<<< Updated upstream
 # %%
+=======
+# Main loop of the ant-colony optimization algorithm
+for iteration in range(max_iterations):
+    # Construct solutions
+    for ant in ants:
+        ant.construct_solution()
+
+        # Apply mutation
+        ant.solution = Mutation.random_selection_mutation(ant.solution, mutation_rate)
+        print("Mutation is running")
+
+    # Evaluate solutions
+    for ant in ants:
+        ant.evaluate_solution()
+
+    # Update pheromone
+    update_pheromone(ants)
+
+    # Evaporation
+    evaporate_pheromone()
+
+# Obtain Pareto front from the solutions found by ants
+pareto_front = extract_pareto_front(ants)
+#%%
+
+#%%
+# if length & duration objective function classes are okay then this would be the updated ACO
+# update is in AntColony class in def update_pheromones
+
+class Archive:
+    def __init__(self):
+        self.objective_values = []
+
+    def add_solution(self, objective_values):
+        self.objective_values.append(objective_values)
+
+class Ant:
+    def __init__(self, colony, start_node):
+        self.colony = colony
+        self.current_node = start_node
+        self.visited_nodes = [start_node]
+        self.objective_values = None
+
+    def move_to_next_node(self):
+        next_node = self.select_next_node()
+        self.visited_nodes.append(next_node)
+        self.current_node = next_node
+
+    def select_next_node(self):
+        probabilities = self.calculate_probabilities()
+        next_node = np.random.choice(list(self.colony.graph.neighbors(self.current_node)), p=probabilities)
+        return next_node
+
+    def calculate_probabilities(self): #calc prob of moving to neighbouring node (run ants function)
+        pheromone_values = self.colony.pheromones[self.current_node]
+        unvisited_nodes = set(self.colony.graph.nodes) - set(self.visited_nodes)
+        probabilities = [pheromone_values[node] ** self.colony.alpha *
+                         (1.0 / self.colony.graph.get_edge_data(self.current_node, node)['length']) ** self.colony.beta
+                         for node in self.colony.graph.nodes]
+        probabilities = [p if i in unvisited_nodes else 0 for i, p in enumerate(probabilities)]
+        probabilities /= np.sum(probabilities)
+        return probabilities
+
+    def evaluate_objectives(self):
+        self.objective_values = self.colony.objective_function.evaluate(self.visited_nodes)
+>>>>>>> Stashed changes
 ######################
 
 # this is the functional class, others are drafts or templates

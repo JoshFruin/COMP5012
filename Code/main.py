@@ -41,7 +41,11 @@ for index, row in edges_df.iterrows():
         foot=row['foot']
     )
 
+<<<<<<< Updated upstream
 # create and set objects
+=======
+# Loads ShortestPathProblem function from problem.py
+>>>>>>> Stashed changes
 prob = problem.ShortestPathProblem(networkMap)
 # prob.displayMap()
 archive = Archive()
