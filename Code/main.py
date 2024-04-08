@@ -52,9 +52,10 @@ progress_results = []
 
 iterations = 1
 sourceNode = 440853802
-targetNode = 338898805
+targetNode = 65316450
 
 for i in range(iterations):
+
     optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob)
     print("\n Iteration complete \n")
     best_path, best_result = optimiser.get_best_path()  # Assuming you have this function

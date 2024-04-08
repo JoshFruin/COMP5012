@@ -186,10 +186,13 @@ class AntColony:
         """
         Update pheromone levels on edges based on the ant's traversal path and objective values.
         """
-        for edge, data in self.graph.edges(data=True):
-            # ... (evaporation code)
-            u, v = edge
-            pheromone_update = (1 - self.evaporation_rate) * self.pheromones.get((u, v), 0)  # Evaporation
+
+        for edge in self.graph.edges():
+
+            node1 = edge[0]
+            node2 = edge[1]
+            # node1, node2, _ = edge
+            pheromone_update = (1 - self.evaporation_rate) * self.pheromones.get((node1, node2), 0)  # Evaporation
 
             for path, result in self.archive.paths_results_archive:  # Iterate through archive
                 if edge in path:
@@ -198,7 +201,7 @@ class AntColony:
                     quality = self.distance_weight / result[0] + self.time_weight / result[1]
                     pheromone_update += quality
 
-                self.pheromones[(u, v)] = pheromone_update
+                self.pheromones[(node1, node2)] = pheromone_update
 
     def get_best_path(self):
         """
