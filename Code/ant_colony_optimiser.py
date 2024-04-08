@@ -87,37 +87,33 @@ class AntColony:
 
         if len(unvisited) > 0:
             for node in unvisited:  # Loop through unvisited nodes
-
                 edge_data = self.graph.get_edge_data(ant['current_node'],
-                                                     node)  # Get edge data between current node and
-                # print(edge_data)
+                                                     node)  # Get edge data between current node and target unvisited node
 
-                # target unvisited node
-                distance = edge_data.get('length', 0)  # Default to 1 if no data is available
-                speed_limit_key = edge_data.get('car', 0)  # We need to change these to equal our CSV column names
+                if edge_data:  # Check if edge data exists
+                    distance = edge_data.get('length', 0)  # Default to 0 if no data is available
+                    speed_limit_key = edge_data.get('car', 0)  # Default to 0 if no data is available
 
-                if speed_limit_key > 0 and distance > 0:
+                    if speed_limit_key > 0 and distance > 0:
+                        # Heuristics
+                        speed_limit = problem.speedSwitcher(speed_limit_key)
+                        time = distance / speed_limit if speed_limit > 0 else 0
 
-                    # Heuristics
-                    speed_limit = problem.speedSwitcher(speed_limit_key)
-
-                    time = distance / speed_limit if speed_limit > 0 else 0  # Calculate time
-                    heuristic = (1 / distance) * self.distance_weight + (
-                            1 / time) * self.time_weight  # Create heuristic to guide ants
+                        if time > 0:  # Check if time is greater than 0 to avoid division by zero
+                            heuristic = (1 / distance) * self.distance_weight + (
+                                        1 / time) * self.time_weight  # Create heuristic to guide ants
+                        else:
+                            # Handle the case where time is 0 (division by zero)
+                            heuristic = float('inf')  # Assign a very large value to heuristic
+                    else:
+                        # Handle the case where either speed limit or distance is 0
+                        heuristic = float('inf')  # Assign a very large value to heuristic
 
                     # Pheromone Influence
                     pheromone = self.pheromones.get((ant['current_node'], node), 1)
-
-                    probabilities[node] = ((pheromone ** self.alpha) * (
-                            heuristic ** self.beta))  # Probability of traveling to target node using pheromone
-                    # importance and heuristic
+                    probabilities[node] = (pheromone ** self.alpha) * (
+                                heuristic ** self.beta)  # Probability of traveling to target node using pheromone importance and heuristic
                     total_prob += probabilities[node]  # Should be 1
-
-                else:
-                    continue  # NEED TO COME UP WITH A BETTER IDEA HERE, THE ANTS ARE JUST TERMINATING
-
-        # else:
-        #   break
 
         # Probabilistic Selection
         if total_prob > 0:  # Check there are valid nodes to move to
@@ -126,11 +122,12 @@ class AntColony:
             next_node = random.choices(nodes, weights=node_weights)[0]  # Random aspect to guided node choice
         else:
             # If all probabilities were 0 or all nodes inaccessible (e.g., trapped ant), choose randomly
-            # can we do this? It could choose an inaccessible node.
-
-            # convert neighbours into a list for the random.choice function
             available_neighbors = list(neighbors)
-            next_node = random.choice(available_neighbors)
+            if available_neighbors:  # Check if available_neighbors is not empty
+                next_node = random.choice(available_neighbors)
+            else:
+                # Handle the case where no neighbors are available
+                next_node = None
 
         return next_node
 
@@ -167,18 +164,27 @@ class AntColony:
         - next_node: Next node to which the ant will move.
         """
 
+        print("Current node:", ant['current_node'])
+        print("Next node:", next_node)
+
         # Update distance and time traveled
         edge_data = self.graph.get_edge_data(ant['current_node'], next_node)
-        distance = edge_data.get('length', 0)  # Check variables with the CSV
-        speed_limit_key = edge_data.get('car', 0)  # Check variables with the CSV + use speed switcher
 
-        speed_limit = problem.speedSwitcher(speed_limit_key)
-        time = distance / speed_limit if speed_limit > 0 else 0
+        print("Edge data:", edge_data)
 
-        ant['visited'].append(next_node)  # Add next_node to the ant's visited list
-        ant['current_node'] = next_node  # Update the current node
-        ant['distance'] += distance  # Updates distance and time for that specific ant
-        ant['time'] += time
+        if edge_data is not None:
+            distance = edge_data.get('length', 0)  # Check variables with the CSV
+            speed_limit_key = edge_data.get('car', 0)  # Check variables with the CSV + use speed switcher
+
+            speed_limit = problem.speedSwitcher(speed_limit_key)
+            time = distance / speed_limit if speed_limit > 0 else 0
+
+            ant['visited'].append(next_node)  # Add next_node to the ant's visited list
+            ant['current_node'] = next_node  # Update the current node
+            ant['distance'] += distance  # Updates distance and time for that specific ant
+            ant['time'] += time
+        else:
+            print("Edge data not found. Check your graph representation.")
 
     def update_pheromones(self):
         """
