@@ -9,7 +9,6 @@ from archive import Archive
 nodes_df = pd.read_csv("nodes_l.csv")
 edges_df = pd.read_csv("edges_l.csv")
 
-# ----------------------------    Test Graph
 # Display basic information about the dataframes
 print("Nodes DataFrame:")
 print(nodes_df.head())
@@ -20,7 +19,9 @@ print(edges_df.head())
 networkMap = nx.Graph()
 
 # Add nodes to the graph
+print("\nAdding nodes to the graph:")
 for index, row in nodes_df.iterrows():
+    print("Adding node:", row['node_id'])
     networkMap.add_node(
         row['node_id'],
         longitude=row['longitude'],
@@ -29,8 +30,18 @@ for index, row in nodes_df.iterrows():
     )
 
 # Add edges to the graph
-for index, row in edges_df.iterrows():
-    print(f"Processing edge {index+1}/{len(edges_df)}")  # Print edge being processed
+# Add edges to the graph
+print("\nAdding edges to the graph:")
+total_edges = len(edges_df)
+for idx, row in edges_df.iterrows():
+    # Fill missing values with 0
+    row.fillna(0, inplace=True)
+
+    print(f"Processing edge {idx + 1}/{total_edges}")
+    print("Adding edge from", row['source'], "to", row['target'])
+    if idx >= total_edges:
+        print("Reached end of edges DataFrame. Exiting loop.")
+        break
     networkMap.add_edge(
         row['source'],  # source node id
         row['target'],  # target node id
@@ -43,22 +54,20 @@ for index, row in edges_df.iterrows():
         foot=row['foot']
     )
 
-    # Check if edge data is being found correctly
-    edge_data = networkMap.get_edge_data(row['source'], row['target'])
-    if edge_data is None:
-        print("Edge data not found. Check your graph representation.")
-    else:
-        print("Edge data found successfully.")
+# Verify edge data
+print("\nVerifying Edge Data:")
+for edge in networkMap.edges(data=True):
+    if 'length' not in edge[2]:
+        print("Edge data not found for edge:", edge)
+        print("Check your graph representation.")
+        break
+else:
+    print("Edge data found for all edges.")
 
 # Display basic information about the graph
 print("\nGraph Information:")
 print("Number of nodes:", networkMap.number_of_nodes())
 print("Number of edges:", networkMap.number_of_edges())
-
-# Print some edge data to verify
-print("\nSample Edge Data:")
-for edge in networkMap.edges(data=True):
-    print("Edge:", edge)
 
 # print the data to test
 print(nodes_df.dtypes)
@@ -79,7 +88,7 @@ sourceNode = 440853802
 targetNode = 338898805
 
 for i in range(iterations):
-    print(f"Iteration {i + 1}")
+    print(f"\nIteration {i + 1}")
     optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob)
     print("Iteration complete")
     best_path, best_result = optimiser.get_best_path()  # Assuming you have this function

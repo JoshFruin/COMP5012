@@ -167,24 +167,28 @@ class AntColony:
         print("Current node:", ant['current_node'])
         print("Next node:", next_node)
 
-        # Update distance and time traveled
-        edge_data = self.graph.get_edge_data(ant['current_node'], next_node)
+        # Check if the edge exists
+        if self.graph.has_edge(ant['current_node'], next_node):
+            # Get edge data
+            edge_data = self.graph.get_edge_data(ant['current_node'], next_node)
 
-        print("Edge data:", edge_data)
+            print("Edge data found:", edge_data)
 
-        if edge_data is not None:
-            distance = edge_data.get('length', 0)  # Check variables with the CSV
-            speed_limit_key = edge_data.get('car', 0)  # Check variables with the CSV + use speed switcher
+            if edge_data is not None:
+                distance = edge_data.get('length', 0)  # Check variables with the CSV
+                speed_limit_key = edge_data.get('car', 0)  # Check variables with the CSV + use speed switcher
 
-            speed_limit = problem.speedSwitcher(speed_limit_key)
-            time = distance / speed_limit if speed_limit > 0 else 0
+                speed_limit = problem.speedSwitcher(speed_limit_key)
+                time = distance / speed_limit if speed_limit > 0 else 0
 
-            ant['visited'].append(next_node)  # Add next_node to the ant's visited list
-            ant['current_node'] = next_node  # Update the current node
-            ant['distance'] += distance  # Updates distance and time for that specific ant
-            ant['time'] += time
+                ant['visited'].append(next_node)  # Add next_node to the ant's visited list
+                ant['current_node'] = next_node  # Update the current node
+                ant['distance'] += distance  # Updates distance and time for that specific ant
+                ant['time'] += time
+            else:
+                print("Edge data not found. Check your graph representation.")
         else:
-            print("Edge data not found. Check your graph representation.")
+            print("Edge does not exist between current node and next node.")
 
     def update_pheromones(self):
         """
