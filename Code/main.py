@@ -54,11 +54,11 @@ for idx, row in edges_df.iterrows():
         foot=row['foot']
     )
 
-# Create the ShortestPathProblem object
+"""# Create the ShortestPathProblem object
 prob = ShortestPathProblem(networkMap)
 
 # Visualize the graph
-prob.visualize_graph()
+prob.visualize_graph()"""
 
 # Verify edge data
 print("\nVerifying Edge Data:")
@@ -80,7 +80,66 @@ print(nodes_df.dtypes)
 print(edges_df.dtypes)
 print("Data test successful!")
 
+# create test graph
+# init empty graph
+testG = nx.Graph()
+
+# Add nodes
+testG.add_nodes_from(range(1, 11))
+
+# Add edges with length data
+edge_list = [(1, 2, {'length': 5}),
+             (1, 3, {'length': 7}),
+             (2, 3, {'length': 9}),
+             (2, 4, {'length': 3}),
+             (3, 4, {'length': 4}),
+             (3, 5, {'length': 8}),
+             (4, 5, {'length': 6}),
+             (4, 6, {'length': 2}),
+             (5, 6, {'length': 5}),
+             (5, 7, {'length': 9}),
+             (6, 7, {'length': 3}),
+             (6, 8, {'length': 7}),
+             (7, 8, {'length': 5}),
+             (7, 9, {'length': 4}),
+             (8, 9, {'length': 6}),
+             (8, 10, {'length': 8}),
+             (9, 10, {'length': 9})]
+
+testG.add_edges_from(edge_list)
+
+# Print edge data
+for t_edge in testG.edges(data=True):
+    print(edge)
+
+# Draw the graph (optional)
+nx.draw(testG, with_labels=True)
+
+# output test map
 # create and set objects
+prob = problem.ShortestPathProblem(testG)
+# prob.displayMap()
+archive = Archive()
+optimiser = AntColony(graph=testG, num_ants=100)
+
+# stores iterations results
+progress_results = []
+
+iterations = 10
+sourceNode = 2
+targetNode = 10
+
+for i in range(iterations):
+    print(f"\nIteration {i + 1}")
+    optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob)
+    print("Iteration complete")
+    best_path, best_result = optimiser.get_best_path()  # Assuming you have this function
+    progress_results.append(best_result)  # Or another metric you prefer
+    optimiser.archive.clear()  # Clear archive for next iteration
+
+print("YAY")
+
+"""# create and set objects
 prob = problem.ShortestPathProblem(networkMap)
 # prob.displayMap()
 archive = Archive()
@@ -102,3 +161,4 @@ for i in range(iterations):
     optimiser.archive.clear()  # Clear archive for next iteration
 
 print("YAY")
+"""
