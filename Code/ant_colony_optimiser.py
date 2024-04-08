@@ -49,6 +49,7 @@ class AntColony:
         # runs all the ants in the iteration
         for anti in range(self.num_ants):
             self.run_ant(source_node, target_node, problem)
+            print("Complete Ant Cycle \n")
 
         # update all pheromones
         self.update_pheromones()
@@ -79,6 +80,7 @@ class AntColony:
         - next_node: Next node selected for the ant to move to.
         """
         neighbors = self.graph.neighbors(ant['current_node'])  # Get current node and look at neighboring nodes
+        all_neighbors = [node for node in neighbors]
         unvisited = [node for node in neighbors if
                      node not in ant['visited']]  # Create list of unvisited potential next neighboring nodes
 
@@ -128,9 +130,7 @@ class AntColony:
             # If all probabilities were 0 or all nodes inaccessible (e.g., trapped ant), choose randomly
             # can we do this? It could choose an inaccessible node.
 
-            # convert neighbours into a list for the random.choice function
-            available_neighbors = list(neighbors)
-            next_node = random.choice(available_neighbors)
+            next_node = random.choice(all_neighbors)
 
         return next_node
 
@@ -152,9 +152,10 @@ class AntColony:
             next_node = self._select_next_node(ant, problem)  # Need the move_ant
             self._move_ant(ant, next_node, problem)
 
+
         # Final Evaluation Here:
         path = ant['visited']  # The complete path taken by the ant, nodes visited
-        print(path)
+        # print(path)
         result = problem.evaluate(path)  # Use your ShortestPathProblem class
         self.archive.add_solution(path, result)
 
@@ -177,6 +178,7 @@ class AntColony:
 
         ant['visited'].append(next_node)  # Add next_node to the ant's visited list
         ant['current_node'] = next_node  # Update the current node
+        print("Ant moved to: ", ant['current_node'])
         ant['distance'] += distance  # Updates distance and time for that specific ant
         ant['time'] += time
 

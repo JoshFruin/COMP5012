@@ -50,13 +50,13 @@ optimiser = AntColony(graph=networkMap, num_ants=100)
 # stores iterations results
 progress_results = []
 
-iterations = 10
+iterations = 1
 sourceNode = 440853802
 targetNode = 338898805
 
 for i in range(iterations):
     optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob)
-    print("Iteration complete")
+    print("\n Iteration complete \n")
     best_path, best_result = optimiser.get_best_path()  # Assuming you have this function
     progress_results.append(best_result)  # Or another metric you prefer
     optimiser.archive.clear()  # Clear archive for next iteration
