@@ -78,56 +78,48 @@ class AntColony:
         Returns:
         - next_node: Next node selected for the ant to move to.
         """
-        neighbors = self.graph.neighbors(ant['current_node'])  # Get current node and look at neighboring nodes
-        unvisited = [node for node in neighbors if
-                     node not in ant['visited']]  # Create list of unvisited potential next neighboring nodes
+        neighbors = list(self.graph.neighbors(ant['current_node']))  # Get current node and look at neighboring nodes
+        unvisited = [node for node in neighbors if node not in ant['visited']]  # Unvisited neighboring nodes
 
-        probabilities = {}  # Initialize probability dictionary
-        total_prob = 0  # Initialize variable (should end up as 1)
+        if not unvisited:  # If there are no unvisited neighbors
+            # Backtrack to the previous node
+            previous_node = ant['visited'][-2]  # Get the second last visited node
+            ant['visited'].pop()  # Remove the current node
+            return previous_node  # Backtrack to the previous node
 
-        if len(unvisited) > 0:
-            for node in unvisited:  # Loop through unvisited nodes
-                edge_data = self.graph.get_edge_data(ant['current_node'],
-                                                     node)  # Get edge data between current node and target unvisited node
+        # Initialize probability dictionary
+        probabilities = {node: 0 for node in unvisited}
+        total_prob = 0
 
-                if edge_data:  # Check if edge data exists
-                    distance = edge_data.get('length', 0)  # Default to 0 if no data is available
-                    speed_limit_key = edge_data.get('car', 0)  # Default to 0 if no data is available
+        for node in unvisited:
+            edge_data = self.graph.get_edge_data(ant['current_node'], node)
+            if edge_data:
+                distance = edge_data.get('length', 0)
+                speed_limit_key = edge_data.get('car', 0)
 
-                    if speed_limit_key > 0 and distance > 0:
-                        # Heuristics
-                        speed_limit = problem.speedSwitcher(speed_limit_key)
-                        time = distance / speed_limit if speed_limit > 0 else 0
+                if speed_limit_key > 0 and distance > 0:
+                    speed_limit = problem.speedSwitcher(speed_limit_key)
+                    time = distance / speed_limit if speed_limit > 0 else 0
 
-                        if time > 0:  # Check if time is greater than 0 to avoid division by zero
-                            heuristic = (1 / distance) * self.distance_weight + (
-                                        1 / time) * self.time_weight  # Create heuristic to guide ants
-                        else:
-                            # Handle the case where time is 0 (division by zero)
-                            heuristic = float('inf')  # Assign a very large value to heuristic
+                    if time > 0:
+                        heuristic = (1 / distance) * self.distance_weight + (1 / time) * self.time_weight
                     else:
-                        # Handle the case where either speed limit or distance is 0
-                        heuristic = float('inf')  # Assign a very large value to heuristic
+                        heuristic = float('inf')
+                else:
+                    heuristic = float('inf')
 
-                    # Pheromone Influence
-                    pheromone = self.pheromones.get((ant['current_node'], node), 1)
-                    probabilities[node] = (pheromone ** self.alpha) * (
-                                heuristic ** self.beta)  # Probability of traveling to target node using pheromone importance and heuristic
-                    total_prob += probabilities[node]  # Should be 1
+                pheromone = self.pheromones.get((ant['current_node'], node), 1)
+                probabilities[node] = (pheromone ** self.alpha) * (heuristic ** self.beta)
+                total_prob += probabilities[node]
 
-        # Probabilistic Selection
-        if total_prob > 0:  # Check there are valid nodes to move to
-            nodes = list(probabilities.keys())  # Extract key values and convert to list
-            node_weights = [probabilities[node] / total_prob for node in nodes]  # Normalized probabilities
-            next_node = random.choices(nodes, weights=node_weights)[0]  # Random aspect to guided node choice
+        if total_prob > 0:
+            # Normalized probabilities
+            node_weights = {node: prob / total_prob for node, prob in probabilities.items()}
+            # Randomly choose the next node based on probabilities
+            next_node = random.choices(list(probabilities.keys()), weights=list(node_weights.values()))[0]
         else:
-            # If all probabilities were 0 or all nodes inaccessible (e.g., trapped ant), choose randomly
-            available_neighbors = list(neighbors)
-            if available_neighbors:  # Check if available_neighbors is not empty
-                next_node = random.choice(available_neighbors)
-            else:
-                # Handle the case where no neighbors are available
-                next_node = None
+            # If all probabilities were 0, choose randomly among unvisited neighbors
+            next_node = random.choice(unvisited)
 
         return next_node
 
