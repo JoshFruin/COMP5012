@@ -17,6 +17,14 @@ class ShortestPathProblem:
         print("Layout Calculated")
         plt.show()
 
+    def visualize_graph(self):
+        """
+        Visualize the graph using matplotlib and networkx.
+        """
+        positions = nx.spring_layout(self.problemMap, iterations=10)
+        nx.draw(self.problemMap, positions, with_labels=True, node_size=300)
+        plt.show()
+
     def speedSwitcher(self, choice):
         switcher = {
             0: 0,

@@ -79,7 +79,7 @@ def inversion_mutation(solution):
 
 # Example usage (assuming you have a solution path as a list)
 mutation_rate = 0.05  # Adjust mutation rate as needed
-mutated_solution = random_selection_mutation(solution.copy())  # Operate on a copy
+#mutated_solution = random_selection_mutation(solution.copy())  # Operate on a copy
 # Or use any other mutation function (swap_mutation, insertion_mutation, inversion_mutation)
 
 def evaporate_pheromones(pheromones, evaporation_rate):

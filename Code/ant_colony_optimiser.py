@@ -6,7 +6,7 @@ Created on Thu Mar 21 16:21:20 2024
 """
 import random
 import archive
-
+from Mutation import random_selection_mutation  # Import the mutation functions
 
 # %%
 ######################
@@ -53,41 +53,48 @@ class AntColony:
         # update all pheromones
         self.update_pheromones()
 
-    def initialize_pheromones(self):
-        """
+    """def initialize_pheromones(self):
+        
         Initialize pheromone levels on edges of the graph.
 
         Returns:
         - pheromones (dict): Dictionary storing pheromone levels on edges.
-        """
+        
         pheromones = {}  # Dict that stores pheromone levels as a tuple
         for edge in self.graph.edges:  # Iterates through all edges
             u, v = edge  # Set edge source and target IDs
             pheromones[(u, v)] = 1  # Start edge pheromone with a uniform base value of 1
 
         print("Starting Pheromones initialised")
-        return pheromones  # Keep for now, perhaps not needed
+        return pheromones  # Keep for now, perhaps not needed"""
+
+    def initialize_pheromones(self):
+        """
+        Initialize pheromone levels on edges of the graph.
+        """
+        pheromones = {(u, v): 1 for u, v in self.graph.edges}  # Initialize pheromones for all edges
+        return pheromones
 
     def _select_next_node(self, ant, problem):
-        """
-        Select the next node for the ant to move to based on pheromone levels and heuristic information.
+        neighbors = list(self.graph.neighbors(ant['current_node']))
+        unvisited = [node for node in neighbors if node not in ant['visited'] and node != ant.get('previous_node')]
 
-        Args:
-        - ant (dict): Ant's information including current node and visited nodes.
+        if not unvisited:
+            print("No unvisited neighbors found.")
+            previous_node = ant['visited'][-2]
+            ant['visited'].pop()
+            ant['previous_node'] = ant['current_node']
+            return previous_node
 
-        Returns:
-        - next_node: Next node selected for the ant to move to.
-        """
-        neighbors = list(self.graph.neighbors(ant['current_node']))  # Get current node and look at neighboring nodes
-        unvisited = [node for node in neighbors if node not in ant['visited']]  # Unvisited neighboring nodes
+        unvisited = [node for node in unvisited if node != ant['previous_node']]
 
-        if not unvisited:  # If there are no unvisited neighbors
-            # Backtrack to the previous node
-            previous_node = ant['visited'][-2]  # Get the second last visited node
-            ant['visited'].pop()  # Remove the current node
-            return previous_node  # Backtrack to the previous node
+        if not unvisited:
+            print("All neighbors visited except previous node.")
+            previous_node = ant['visited'][-2]
+            ant['visited'].pop()
+            ant['previous_node'] = ant['current_node']
+            return previous_node
 
-        # Initialize probability dictionary
         probabilities = {node: 0 for node in unvisited}
         total_prob = 0
 
@@ -100,11 +107,7 @@ class AntColony:
                 if speed_limit_key > 0 and distance > 0:
                     speed_limit = problem.speedSwitcher(speed_limit_key)
                     time = distance / speed_limit if speed_limit > 0 else 0
-
-                    if time > 0:
-                        heuristic = (1 / distance) * self.distance_weight + (1 / time) * self.time_weight
-                    else:
-                        heuristic = float('inf')
+                    heuristic = (1 / distance) * self.distance_weight + (1 / time) * self.time_weight
                 else:
                     heuristic = float('inf')
 
@@ -113,14 +116,13 @@ class AntColony:
                 total_prob += probabilities[node]
 
         if total_prob > 0:
-            # Normalized probabilities
             node_weights = {node: prob / total_prob for node, prob in probabilities.items()}
-            # Randomly choose the next node based on probabilities
             next_node = random.choices(list(probabilities.keys()), weights=list(node_weights.values()))[0]
         else:
-            # If all probabilities were 0, choose randomly among unvisited neighbors
             next_node = random.choice(unvisited)
 
+        ant['visited'].append(next_node)
+        ant['previous_node'] = ant['current_node']
         return next_node
 
     def run_ant(self, start_node, target_node, problem):
@@ -135,11 +137,14 @@ class AntColony:
         - result: Result of the ant's journey based on the problem evaluation.
         """
         ant = {'current_node': start_node, 'visited': [start_node], 'distance': 0,
-               'time': 0}  # Initialize list of visited nodes with the start node as it's been visited
+               'time': 0, 'previous_node': None}  # Initialize previous_node
 
         while ant['current_node'] != target_node:  # While ant has not reached the target node, it selects the next node
             next_node = self._select_next_node(ant, problem)  # Need the move_ant
             self._move_ant(ant, next_node, problem)
+
+        # Perform mutation on the ant's path
+        #ant['visited'] = random_selection_mutation(ant['visited'], mutation_rate)  # Use the imported mutation function
 
         # Final Evaluation Here:
         path = ant['visited']  # The complete path taken by the ant, nodes visited
@@ -186,19 +191,16 @@ class AntColony:
         """
         Update pheromone levels on edges based on the ant's traversal path and objective values.
         """
-        for edge, data in self.graph.edges(data=True):
-            # ... (evaporation code)
+        for edge in self.graph.edges:
             u, v = edge
             pheromone_update = (1 - self.evaporation_rate) * self.pheromones.get((u, v), 0)  # Evaporation
 
-            for path, result in self.archive.paths_results_archive:  # Iterate through archive
+            for path, result in self.archive.paths_results_archive:
                 if edge in path:
-                    # Use result[0] = distance and result[1] = time
-                    # works out path quality to modify the pheromone update
-                    quality = self.distance_weight / result[0] + self.time_weight / result[1]
+                    quality = self.distance_weight / result['Distance'] + self.time_weight / result['Time']
                     pheromone_update += quality
 
-                self.pheromones[(u, v)] = pheromone_update
+            self.pheromones[(u, v)] = pheromone_update
 
     def get_best_path(self):
         """

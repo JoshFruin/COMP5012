@@ -4,6 +4,7 @@ import networkx as nx
 import problem
 from ant_colony_optimiser import AntColony
 from archive import Archive
+from problem import ShortestPathProblem
 
 # load san francisco map data
 nodes_df = pd.read_csv("nodes_l.csv")
@@ -30,7 +31,6 @@ for index, row in nodes_df.iterrows():
     )
 
 # Add edges to the graph
-# Add edges to the graph
 print("\nAdding edges to the graph:")
 total_edges = len(edges_df)
 for idx, row in edges_df.iterrows():
@@ -53,6 +53,12 @@ for idx, row in edges_df.iterrows():
         bike_reverse=row['bike_reverse'],
         foot=row['foot']
     )
+
+# Create the ShortestPathProblem object
+prob = ShortestPathProblem(networkMap)
+
+# Visualize the graph
+prob.visualize_graph()
 
 # Verify edge data
 print("\nVerifying Edge Data:")
