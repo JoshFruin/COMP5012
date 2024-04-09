@@ -44,7 +44,7 @@ class AntColony:
         self.distance_weight = 0.5  # the importance of distance vs time, scale: 0-1
         self.time_weight = 0.5
 
-    def run(self, source_node, target_node, problem, mutation_rate):
+    def run(self, source_node, target_node, problem, mutation_rate, mutation_func):
         """
         Run the Ant Colony Optimization algorithm.
 
@@ -53,9 +53,10 @@ class AntColony:
         - target_node: The target node for the path.
         - problem: An instance of the problem to be solved.
         - mutation_rate: Probability of applying mutation to the solution.
+        - mutation_func: The mutation function to be applied.
         """
         for i in range(self.num_ants):
-            self.run_ant(source_node, target_node, problem, mutation_rate)
+            self.run_ant(source_node, target_node, problem, mutation_rate, mutation_func)
             print("Complete Ant Cycle \n")
 
         # Update pheromones after all ants have completed their journeys
@@ -141,14 +142,16 @@ class AntColony:
 
         return next_node
 
-    def run_ant(self, start_node, target_node, problem, mutation_rate):
+    def run_ant(self, start_node, target_node, problem, mutation_rate, mutation_func):
         """
         Simulate the movement of an ant from a start node to the target node.
 
         Args:
         - start_node: Node ID from which the ant starts its journey.
+        - target_node: The target node for the path.
         - problem: Problem instance to evaluate the solution path.
         - mutation_rate: Probability of applying mutation to the solution.
+        - mutation_func: The mutation function to be applied.
 
         Returns:
         - result: Result of the ant's journey based on the problem evaluation.
@@ -160,7 +163,7 @@ class AntColony:
             self._move_ant(ant, next_node, problem)
 
             # Apply mutation
-            ant['visited'] = random_selection_mutation(ant['visited'], mutation_rate)
+            ant['visited'] = mutation_func(ant['visited'], mutation_rate)
 
         path = ant['visited']
         result = problem.evaluate(path)
