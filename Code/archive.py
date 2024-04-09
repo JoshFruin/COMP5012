@@ -5,3 +5,6 @@ class Archive:
 
     def add_solution(self, path, result):
         self.paths_results_archive.append((path, result))
+
+    def clear(self):
+        self.paths_results_archive = []

@@ -6,7 +6,7 @@ Created on Thu Mar 21 16:21:20 2024
 """
 import random
 import archive
-from Mutation import random_selection_mutation  # Import the mutation functions
+
 
 # %%
 ######################
@@ -49,80 +49,89 @@ class AntColony:
         # runs all the ants in the iteration
         for anti in range(self.num_ants):
             self.run_ant(source_node, target_node, problem)
+            print("Complete Ant Cycle \n")
 
         # update all pheromones
         self.update_pheromones()
 
-    """def initialize_pheromones(self):
-        
+    def initialize_pheromones(self):
+        """
         Initialize pheromone levels on edges of the graph.
 
         Returns:
         - pheromones (dict): Dictionary storing pheromone levels on edges.
-        
+        """
         pheromones = {}  # Dict that stores pheromone levels as a tuple
         for edge in self.graph.edges:  # Iterates through all edges
             u, v = edge  # Set edge source and target IDs
             pheromones[(u, v)] = 1  # Start edge pheromone with a uniform base value of 1
 
         print("Starting Pheromones initialised")
-        return pheromones  # Keep for now, perhaps not needed"""
-
-    def initialize_pheromones(self):
-        """
-        Initialize pheromone levels on edges of the graph.
-        """
-        pheromones = {(u, v): 1 for u, v in self.graph.edges}  # Initialize pheromones for all edges
-        return pheromones
+        return pheromones  # Keep for now, perhaps not needed
 
     def _select_next_node(self, ant, problem):
-        neighbors = list(self.graph.neighbors(ant['current_node']))
-        unvisited = [node for node in neighbors if node not in ant['visited'] and node != ant.get('previous_node')]
+        """
+        Select the next node for the ant to move to based on pheromone levels and heuristic information.
 
-        if not unvisited:
-            print("No unvisited neighbors found.")
-            previous_node = ant['visited'][-2]
-            ant['visited'].pop()
-            ant['previous_node'] = ant['current_node']
-            return previous_node
+        Args:
+        - ant (dict): Ant's information including current node and visited nodes.
 
-        unvisited = [node for node in unvisited if node != ant['previous_node']]
+        Returns:
+        - next_node: Next node selected for the ant to move to.
+        """
+        neighbors = self.graph.neighbors(ant['current_node'])  # Get current node and look at neighboring nodes
+        all_neighbors = [node for node in neighbors]
+        unvisited = [node for node in neighbors if
+                     node not in ant['visited']]  # Create list of unvisited potential next neighboring nodes
 
-        if not unvisited:
-            print("All neighbors visited except previous node.")
-            previous_node = ant['visited'][-2]
-            ant['visited'].pop()
-            ant['previous_node'] = ant['current_node']
-            return previous_node
+        probabilities = {}  # Initialize probability dictionary
+        total_prob = 0  # Initialize variable (should end up as 1)
 
-        probabilities = {node: 0 for node in unvisited}
-        total_prob = 0
+        if len(unvisited) > 0:
+            for node in unvisited:  # Loop through unvisited nodes
 
-        for node in unvisited:
-            edge_data = self.graph.get_edge_data(ant['current_node'], node)
-            if edge_data:
-                distance = edge_data.get('length', 0)
-                speed_limit_key = edge_data.get('car', 0)
+                edge_data = self.graph.get_edge_data(ant['current_node'],
+                                                     node)  # Get edge data between current node and
+                # print(edge_data)
+
+                # target unvisited node
+                distance = edge_data.get('length', 0)  # Default to 1 if no data is available
+                speed_limit_key = edge_data.get('car', 0)  # We need to change these to equal our CSV column names
 
                 if speed_limit_key > 0 and distance > 0:
+
+                    # Heuristics
                     speed_limit = problem.speedSwitcher(speed_limit_key)
-                    time = distance / speed_limit if speed_limit > 0 else 0
-                    heuristic = (1 / distance) * self.distance_weight + (1 / time) * self.time_weight
+
+                    time = distance / speed_limit if speed_limit > 0 else 0  # Calculate time
+                    heuristic = (1 / distance) * self.distance_weight + (
+                            1 / time) * self.time_weight  # Create heuristic to guide ants
+
+                    # Pheromone Influence
+                    pheromone = self.pheromones.get((ant['current_node'], node), 1)
+
+                    probabilities[node] = ((pheromone ** self.alpha) * (
+                            heuristic ** self.beta))  # Probability of traveling to target node using pheromone
+                    # importance and heuristic
+                    total_prob += probabilities[node]  # Should be 1
+
                 else:
-                    heuristic = float('inf')
+                    continue  # NEED TO COME UP WITH A BETTER IDEA HERE, THE ANTS ARE JUST TERMINATING
 
-                pheromone = self.pheromones.get((ant['current_node'], node), 1)
-                probabilities[node] = (pheromone ** self.alpha) * (heuristic ** self.beta)
-                total_prob += probabilities[node]
+        # else:
+        #   break
 
-        if total_prob > 0:
-            node_weights = {node: prob / total_prob for node, prob in probabilities.items()}
-            next_node = random.choices(list(probabilities.keys()), weights=list(node_weights.values()))[0]
+        # Probabilistic Selection
+        if total_prob > 0:  # Check there are valid nodes to move to
+            nodes = list(probabilities.keys())  # Extract key values and convert to list
+            node_weights = [probabilities[node] / total_prob for node in nodes]  # Normalized probabilities
+            next_node = random.choices(nodes, weights=node_weights)[0]  # Random aspect to guided node choice
         else:
-            next_node = random.choice(unvisited)
+            # If all probabilities were 0 or all nodes inaccessible (e.g., trapped ant), choose randomly
+            # can we do this? It could choose an inaccessible node.
 
-        ant['visited'].append(next_node)
-        ant['previous_node'] = ant['current_node']
+            next_node = random.choice(all_neighbors)
+
         return next_node
 
     def run_ant(self, start_node, target_node, problem):
@@ -137,18 +146,16 @@ class AntColony:
         - result: Result of the ant's journey based on the problem evaluation.
         """
         ant = {'current_node': start_node, 'visited': [start_node], 'distance': 0,
-               'time': 0, 'previous_node': None}  # Initialize previous_node
+               'time': 0}  # Initialize list of visited nodes with the start node as it's been visited
 
         while ant['current_node'] != target_node:  # While ant has not reached the target node, it selects the next node
             next_node = self._select_next_node(ant, problem)  # Need the move_ant
             self._move_ant(ant, next_node, problem)
 
-        # Perform mutation on the ant's path
-        #ant['visited'] = random_selection_mutation(ant['visited'], mutation_rate)  # Use the imported mutation function
 
         # Final Evaluation Here:
         path = ant['visited']  # The complete path taken by the ant, nodes visited
-        print(path)
+        # print(path)
         result = problem.evaluate(path)  # Use your ShortestPathProblem class
         self.archive.add_solution(path, result)
 
@@ -161,46 +168,40 @@ class AntColony:
         - next_node: Next node to which the ant will move.
         """
 
-        print("Current node:", ant['current_node'])
-        print("Next node:", next_node)
+        # Update distance and time traveled
+        edge_data = self.graph.get_edge_data(ant['current_node'], next_node)
+        distance = edge_data.get('length', 0)  # Check variables with the CSV
+        speed_limit_key = edge_data.get('car', 0)  # Check variables with the CSV + use speed switcher
 
-        # Check if the edge exists
-        if self.graph.has_edge(ant['current_node'], next_node):
-            # Get edge data
-            edge_data = self.graph.get_edge_data(ant['current_node'], next_node)
+        speed_limit = problem.speedSwitcher(speed_limit_key)
+        time = distance / speed_limit if speed_limit > 0 else 0
 
-            print("Edge data found:", edge_data)
-
-            if edge_data is not None:
-                distance = edge_data.get('length', 0)  # Check variables with the CSV
-                speed_limit_key = edge_data.get('car', 0)  # Check variables with the CSV + use speed switcher
-
-                speed_limit = problem.speedSwitcher(speed_limit_key)
-                time = distance / speed_limit if speed_limit > 0 else 0
-
-                ant['visited'].append(next_node)  # Add next_node to the ant's visited list
-                ant['current_node'] = next_node  # Update the current node
-                ant['distance'] += distance  # Updates distance and time for that specific ant
-                ant['time'] += time
-            else:
-                print("Edge data not found. Check your graph representation.")
-        else:
-            print("Edge does not exist between current node and next node.")
+        ant['visited'].append(next_node)  # Add next_node to the ant's visited list
+        ant['current_node'] = next_node  # Update the current node
+        print("Ant moved to: ", ant['current_node'])
+        ant['distance'] += distance  # Updates distance and time for that specific ant
+        ant['time'] += time
 
     def update_pheromones(self):
         """
         Update pheromone levels on edges based on the ant's traversal path and objective values.
         """
-        for edge in self.graph.edges:
-            u, v = edge
-            pheromone_update = (1 - self.evaporation_rate) * self.pheromones.get((u, v), 0)  # Evaporation
 
-            for path, result in self.archive.paths_results_archive:
+        for edge in self.graph.edges():
+
+            node1 = edge[0]
+            node2 = edge[1]
+            # node1, node2, _ = edge
+            pheromone_update = (1 - self.evaporation_rate) * self.pheromones.get((node1, node2), 0)  # Evaporation
+
+            for path, result in self.archive.paths_results_archive:  # Iterate through archive
                 if edge in path:
-                    quality = self.distance_weight / result['Distance'] + self.time_weight / result['Time']
+                    # Use result[0] = distance and result[1] = time
+                    # works out path quality to modify the pheromone update
+                    quality = self.distance_weight / result[0] + self.time_weight / result[1]
                     pheromone_update += quality
 
-            self.pheromones[(u, v)] = pheromone_update
+                self.pheromones[(node1, node2)] = pheromone_update
 
     def get_best_path(self):
         """
