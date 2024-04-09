@@ -6,7 +6,7 @@ Created on Thu Mar 21 16:21:20 2024
 """
 import random
 import archive
-
+from Mutation import random_selection_mutation
 
 # %%
 ######################
@@ -44,14 +44,21 @@ class AntColony:
         self.distance_weight = 0.5  # the importance of distance vs time, scale: 0-1
         self.time_weight = 0.5
 
-    def run(self, source_node, target_node, problem):
+    def run(self, source_node, target_node, problem, mutation_rate):
+        """
+        Run the Ant Colony Optimization algorithm.
 
-        # runs all the ants in the iteration
-        for anti in range(self.num_ants):
-            self.run_ant(source_node, target_node, problem)
+        Args:
+        - source_node: The starting node for the path.
+        - target_node: The target node for the path.
+        - problem: An instance of the problem to be solved.
+        - mutation_rate: Probability of applying mutation to the solution.
+        """
+        for i in range(self.num_ants):
+            self.run_ant(source_node, target_node, problem, mutation_rate)
             print("Complete Ant Cycle \n")
 
-        # update all pheromones
+        # Update pheromones after all ants have completed their journeys
         self.update_pheromones()
 
     def initialize_pheromones(self):
@@ -134,29 +141,29 @@ class AntColony:
 
         return next_node
 
-    def run_ant(self, start_node, target_node, problem):
+    def run_ant(self, start_node, target_node, problem, mutation_rate):
         """
         Simulate the movement of an ant from a start node to the target node.
 
         Args:
         - start_node: Node ID from which the ant starts its journey.
         - problem: Problem instance to evaluate the solution path.
+        - mutation_rate: Probability of applying mutation to the solution.
 
         Returns:
         - result: Result of the ant's journey based on the problem evaluation.
         """
-        ant = {'current_node': start_node, 'visited': [start_node], 'distance': 0,
-               'time': 0}  # Initialize list of visited nodes with the start node as it's been visited
+        ant = {'current_node': start_node, 'visited': [start_node], 'distance': 0, 'time': 0}
 
-        while ant['current_node'] != target_node:  # While ant has not reached the target node, it selects the next node
-            next_node = self._select_next_node(ant, problem)  # Need the move_ant
+        while ant['current_node'] != target_node:
+            next_node = self._select_next_node(ant, problem)
             self._move_ant(ant, next_node, problem)
 
+            # Apply mutation
+            ant['visited'] = random_selection_mutation(ant['visited'], mutation_rate)
 
-        # Final Evaluation Here:
-        path = ant['visited']  # The complete path taken by the ant, nodes visited
-        # print(path)
-        result = problem.evaluate(path)  # Use your ShortestPathProblem class
+        path = ant['visited']
+        result = problem.evaluate(path)
         self.archive.add_solution(path, result)
 
     def _move_ant(self, ant, next_node, problem):
@@ -188,20 +195,18 @@ class AntColony:
         """
 
         for edge in self.graph.edges():
-
-            node1 = edge[0]
-            node2 = edge[1]
-            # node1, node2, _ = edge
+            node1, node2 = edge
             pheromone_update = (1 - self.evaporation_rate) * self.pheromones.get((node1, node2), 0)  # Evaporation
 
-            for path, result in self.archive.paths_results_archive:  # Iterate through archive
-                if edge in path:
+            for path in self.archive.paths_results_archive:  # Iterate through archive
+                if edge in path:  # Check edge presence in the path list
                     # Use result[0] = distance and result[1] = time
                     # works out path quality to modify the pheromone update
-                    quality = self.distance_weight / result[0] + self.time_weight / result[1]
-                    pheromone_update += quality
+                    for result in self.archive.paths_results_archive[path]:
+                        quality = self.distance_weight / result[0] + self.time_weight / result[1]
+                        pheromone_update += quality
 
-                self.pheromones[(node1, node2)] = pheromone_update
+            self.pheromones[(node1, node2)] = pheromone_update
 
     def get_best_path(self):
         """

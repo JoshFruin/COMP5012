@@ -121,7 +121,7 @@ prob = problem.ShortestPathProblem(testG)
 # prob.displayMap()
 archive = Archive()
 optimiser = AntColony(graph=testG, num_ants=100)
-
+mutation_rate = 0.1  # Adjust as needed
 # stores iterations results
 progress_results = []
 
@@ -131,7 +131,7 @@ targetNode = 10
 
 for i in range(iterations):
     print(f"\nIteration {i + 1}")
-    optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob)
+    optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob, mutation_rate=mutation_rate)
     print("Iteration complete")
     best_result = optimiser.get_best_path()  # Assuming you have this function
     progress_results.append(best_result)  # Or another metric you prefer
@@ -156,7 +156,7 @@ for i in range(iterations):
     print(f"\nIteration {i + 1}")
     optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob)
     print("Iteration complete")
-    best_path, best_result = optimiser.get_best_path()  # Assuming you have this function
+    best_result = optimiser.get_best_path()  # Assuming you have this function
     progress_results.append(best_result)  # Or another metric you prefer
     optimiser.archive.clear()  # Clear archive for next iteration
 
