@@ -52,7 +52,7 @@ class AntColony:
             print("Complete Ant Cycle \n")
 
         # update all pheromones
-        self.update_pheromones()
+        self.update_Ph()
 
     def initialize_pheromones(self):
         """
@@ -64,7 +64,7 @@ class AntColony:
         pheromones = {}  # Dict that stores pheromone levels as a tuple
         for edge in self.graph.edges:  # Iterates through all edges
             u, v = edge  # Set edge source and target IDs
-            pheromones[(u, v)] = 1  # Start edge pheromone with a uniform base value of 1
+            pheromones[(u, v)] = 0  # Start edge pheromone with a uniform base value of 1
 
         print("Starting Pheromones initialised")
         return pheromones  # Keep for now, perhaps not needed
@@ -152,12 +152,12 @@ class AntColony:
             next_node = self._select_next_node(ant, problem)  # Need the move_ant
             self._move_ant(ant, next_node, problem)
 
-
         # Final Evaluation Here:
         path = ant['visited']  # The complete path taken by the ant, nodes visited
         # print(path)
         result = problem.evaluate(path)  # Use your ShortestPathProblem class
         self.archive.add_solution(path, result)
+        # self.archive.print_path()
 
     def _move_ant(self, ant, next_node, problem):
         """
@@ -178,7 +178,7 @@ class AntColony:
 
         ant['visited'].append(next_node)  # Add next_node to the ant's visited list
         ant['current_node'] = next_node  # Update the current node
-        print("Ant moved to: ", ant['current_node'])
+        # print("Ant moved to: ", ant['current_node'])
         ant['distance'] += distance  # Updates distance and time for that specific ant
         ant['time'] += time
 
@@ -186,22 +186,50 @@ class AntColony:
         """
         Update pheromone levels on edges based on the ant's traversal path and objective values.
         """
-
+        # for every edge in the graph
         for edge in self.graph.edges():
 
+            # print(type(edge))
+            # extrapolate the edges nodes
             node1 = edge[0]
             node2 = edge[1]
             # node1, node2, _ = edge
+            # pheromone update equation
             pheromone_update = (1 - self.evaporation_rate) * self.pheromones.get((node1, node2), 0)  # Evaporation
 
+            # for every path and result in the archive
             for path, result in self.archive.paths_results_archive:  # Iterate through archive
-                if edge in path:
-                    # Use result[0] = distance and result[1] = time
-                    # works out path quality to modify the pheromone update
-                    quality = self.distance_weight / result[0] + self.time_weight / result[1]
-                    pheromone_update += quality
+                # for each node pair in the path
+                for i in range(len(path) - 1):  # Iterate using indices
+                    node1 = path[i]
+                    node2 = path[i + 1]
+                    # if the node pair is the same node pair as an edge in the graph
+                    if (node1, node2) == edge:
+                        # works out path quality to modify the pheromone update
+                        print(result)
+                        quality = self.distance_weight / result['Distance'] + self.time_weight / result['Time']
+                        pheromone_update += quality
 
-                self.pheromones[(node1, node2)] = pheromone_update
+                    self.pheromones[(node1, node2)] = pheromone_update
+
+    def update_Ph(self):
+
+        for path, result in self.archive.paths_results_archive:  # Iterate through archive
+            # for each node pair in the path
+            for node1, node2 in zip(path, path[1:]):
+                # convert to tuple
+                edge = (node1, node2)
+                # get existing pheromone level for the edge
+                pheromone_level = self.pheromones.get(edge, 0)
+                # Evaporation
+                # this method ensures that if edges have been used multiple times eg stuck ants, they get evaporated multiple times
+                pheromone_level *= (1 - self.evaporation_rate)
+
+                quality = self.distance_weight / result['Distance'] + self.time_weight / result['Time']
+                pheromone_level += quality
+
+                self.pheromones[edge] = pheromone_level
+
 
     def get_best_path(self):
         """
