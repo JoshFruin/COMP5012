@@ -121,6 +121,7 @@ prob = problem.ShortestPathProblem(testG)
 # prob.displayMap()
 archive = Archive()
 optimiser = AntColony(graph=testG, num_ants=100)
+
 mutation_rate = 0.1  # Adjust as needed
 # stores iterations results
 progress_results = []

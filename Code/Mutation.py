@@ -5,6 +5,28 @@ the optimal result.
 import numpy as np
 import random
 
+
+def select_mutation(mutation_type):
+  """
+  Selects the mutation function based on the mutation type.
+
+  Args:
+  - mutation_type (int): Number representing the mutation type.
+
+  Returns:
+  - mutation_func: Corresponding mutation function.
+  """
+  if mutation_type == 1:
+    return random_selection_mutation
+  elif mutation_type == 2:
+    return swap_mutation
+  elif mutation_type == 3:
+    return insertion_mutation
+  elif mutation_type == 4:
+    return inversion_mutation
+  else:
+    raise ValueError("Invalid mutation type")
+
 def random_selection_mutation(solution, mutation_rate):
   """
   Performs random selection mutation on a solution path.
