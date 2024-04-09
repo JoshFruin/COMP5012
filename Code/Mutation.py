@@ -1,6 +1,8 @@
 """
 This File contains all the mutations we could find that could work for our optimisation problem so that we can find, which mutation will give us
 the optimal result.
+
+By Ciaran and Josh
 """
 import numpy as np
 import random
@@ -66,29 +68,33 @@ def swap_mutation(solution, mutation_rate):
     solution[city1], solution[city2] = solution[city2], solution[city1]
   return solution
 
-def insertion_mutation(solution):
+
+def insertion_mutation(solution, mutation_rate):
   """
   Performs insertion mutation on a solution path.
 
   Args:
       solution: A list representing the current solution path.
+      mutation_rate: Probability of applying mutation to the solution.
 
   Returns:
       A new list with the mutated solution path.
   """
   if random.random() < mutation_rate:
     city_to_move = random.randint(0, len(solution) - 1)
-    solution.pop(city_to_move)
+    city_moved = solution.pop(city_to_move)
     insert_position = random.randint(0, len(solution))
-    solution.insert(insert_position, city_to_move)
+    solution.insert(insert_position, city_moved)
   return solution
 
-def inversion_mutation(solution):
+
+def inversion_mutation(solution, mutation_rate):
   """
   Performs inversion mutation on a solution path.
 
   Args:
       solution: A list representing the current solution path.
+      mutation_rate: Probability of applying mutation to the solution.
 
   Returns:
       A new list with the mutated solution path.
@@ -100,11 +106,6 @@ def inversion_mutation(solution):
     subsequence.reverse()
     solution[start:end] = subsequence
   return solution
-
-# Example usage (assuming you have a solution path as a list)
-mutation_rate = 0.05  # Adjust mutation rate as needed
-#mutated_solution = random_selection_mutation(solution.copy())  # Operate on a copy
-# Or use any other mutation function (swap_mutation, insertion_mutation, inversion_mutation)
 
 def evaporate_pheromones(pheromones, evaporation_rate):
   """
