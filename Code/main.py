@@ -51,7 +51,7 @@ mutation_type = int(input("Select mutation type (1: random selection, 2: swap, 3
 mutation_func = select_mutation(mutation_type)
 mutation_rate = 0.1  # Adjust as needed
 
-# Hyperparameters
+# Other Hyperparameters
 iterations = 5
 sourceNode = 440853802
 targetNode = 65316450
