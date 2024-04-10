@@ -7,12 +7,10 @@ def plot_pareto_front(archive):
     Args:
     - archive (Archive): Archive object containing the paths and their evaluation results.
     """
+
     # Extract distance and time values from the archive
-    distances = []
-    times = []
-    for path, result in archive.paths_results_archive:
-        distances.append(result.get('Distance', 0))
-        times.append(result.get('Time', 0))
+    distances = [result.get('Distance', 0) for _, result in archive.paths_results_archive]
+    times = [result.get('Time', 0) for _, result in archive.paths_results_archive]
 
     # Plot Pareto front
     plt.scatter(distances, times)

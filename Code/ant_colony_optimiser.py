@@ -245,24 +245,21 @@ class AntColony:
 
                 self.pheromones[edge] = pheromone_level
 
+
     def get_best_path(self):
         """
         Retrieves the best path(s) from the archive based on Pareto dominance.
         """
         pareto_optimal_solutions = []
-        for path1, result1 in self.archive.paths_results_archive:  # Access the archive attribute
+        for path, result in self.archive.paths_results_archive:
             dominated = False
-            print(f"Checking solution: {result1}")
-            for path2, result2 in self.archive.paths_results_archive:  # Access the archive attribute
-                if path1 != path2:  # Skip comparing a solution with itself
-                    if dominates(result2, result1):  # Check if result1 is dominated by result2
-                        dominated = True
-                        print(f"Solution {result1} is dominated by solution {result2}")
-                        break
+            for other_path, other_result in self.archive.paths_results_archive:
+                if dominates(result, other_result):  # Check if our result is dominated
+                    dominated = True
+                    break
 
             if not dominated:
-                pareto_optimal_solutions.append((path1, result1))
-                print(f"Solution {result1} is Pareto optimal")
+                pareto_optimal_solutions.append((path, result))
 
         return pareto_optimal_solutions
 
