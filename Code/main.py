@@ -5,6 +5,7 @@ from ant_colony_optimiser import AntColony
 from archive import Archive
 from Mutation import select_mutation
 import plot_pareto_front  # Import the module for plotting Pareto front
+from problem import ShortestPathProblem
 
 # Load San Francisco map data
 nodes_df = pd.read_csv("nodes_l.csv")
@@ -39,12 +40,9 @@ for index, row in edges_df.iterrows():
     )
 
 # Create problem instance and set objects
-prob = problem.ShortestPathProblem(networkMap)
+prob = ShortestPathProblem(networkMap)
 archive = Archive()
 optimiser = AntColony(graph=networkMap, num_ants=100)
-
-# stores iterations results
-progress_results = []
 
 # Mutation parameters
 mutation_type = int(input("Select mutation type (1: random selection, 2: swap, 3: insertion, 4: inversion): "))
@@ -58,15 +56,14 @@ targetNode = 65316450
 
 # Collect results after each iteration
 for i in range(iterations):
-    optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob, mutation_rate=mutation_rate,  mutation_func=mutation_func)
-    print("\n Iteration complete \n")
-    best_paths = optimiser.get_best_path()  # Assuming you have this function
+    optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob, mutation_rate=mutation_rate, mutation_func=mutation_func)
+    print("\nIteration complete\n")
+    best_paths = optimiser.get_best_path()
     for path, result in best_paths:
-        archive.add_solution(path, result)  # Store paths and results in the archive
-    optimiser.archive.clear_archive()  # Clear archive for next iteration
+        archive.add_solution(path, result)
+    optimiser.archive.clear_archive()
 
 print("YAY")
 
 # Plot Pareto front at the end of the loop
 plot_pareto_front.plot_pareto_front(archive)
-
