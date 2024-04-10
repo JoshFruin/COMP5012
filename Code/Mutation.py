@@ -45,7 +45,6 @@ def random_selection_mutation(solution, mutation_rate):
     while city1 == city2:
       city2 = random.randint(0, len(solution) - 1)  # Ensure different cities
     solution[city1], solution[city2] = solution[city2], solution[city1]
-  print("Mutation seems to be working!")
   return solution
 
 

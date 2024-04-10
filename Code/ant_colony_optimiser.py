@@ -2,11 +2,15 @@
 """
 Created on Thu Mar 21 16:21:20 2024
 
+""
+Created on Thu Mar 21 16:21:20 2024
+
 @author: R and J with additions by Josh
 """
 import random
 import archive
 from Mutation import random_selection_mutation
+
 
 # %%
 ######################
@@ -55,12 +59,13 @@ class AntColony:
         - mutation_rate: Probability of applying mutation to the solution.
         - mutation_func: The mutation function to be applied.
         """
-        for i in range(self.num_ants):
+        # runs all the ants in the iteration
+        for anti in range(self.num_ants):
             self.run_ant(source_node, target_node, problem, mutation_rate, mutation_func)
             print("Complete Ant Cycle \n")
 
-        # Update pheromones after all ants have completed their journeys
-        self.update_pheromones()
+        # update all pheromones
+        self.update_Ph()
 
     def initialize_pheromones(self):
         """
@@ -72,7 +77,7 @@ class AntColony:
         pheromones = {}  # Dict that stores pheromone levels as a tuple
         for edge in self.graph.edges:  # Iterates through all edges
             u, v = edge  # Set edge source and target IDs
-            pheromones[(u, v)] = 1  # Start edge pheromone with a uniform base value of 1
+            pheromones[(u, v)] = 0  # Start edge pheromone with a uniform base value of 1
 
         print("Starting Pheromones initialised")
         return pheromones  # Keep for now, perhaps not needed
@@ -154,20 +159,23 @@ class AntColony:
         - mutation_func: The mutation function to be applied.
 
         Returns:
-        - result: Result of the ant's journey based on the problem evaluation.
+        - result: Result of the ant's   journey based on the problem evaluation.
         """
-        ant = {'current_node': start_node, 'visited': [start_node], 'distance': 0, 'time': 0}
+        ant = {'current_node': start_node, 'visited': [start_node], 'distance': 0,
+               'time': 0}  # Initialize list of visited nodes with the start node as it's been visited
 
-        while ant['current_node'] != target_node:
-            next_node = self._select_next_node(ant, problem)
+        while ant['current_node'] != target_node:  # While ant has not reached the target node, it selects the next node
+            next_node = self._select_next_node(ant, problem)  # Need the move_ant
             self._move_ant(ant, next_node, problem)
-
             # Apply mutation
             ant['visited'] = mutation_func(ant['visited'], mutation_rate)
 
-        path = ant['visited']
-        result = problem.evaluate(path)
+        # Final Evaluation Here:
+        path = ant['visited']  # The complete path taken by the ant, nodes visited
+        # print(path)
+        result = problem.evaluate(path)  # Use your ShortestPathProblem class
         self.archive.add_solution(path, result)
+        # self.archive.print_path()
 
     def _move_ant(self, ant, next_node, problem):
         """
@@ -188,7 +196,7 @@ class AntColony:
 
         ant['visited'].append(next_node)  # Add next_node to the ant's visited list
         ant['current_node'] = next_node  # Update the current node
-        print("Ant moved to: ", ant['current_node'])
+        # print("Ant moved to: ", ant['current_node'])
         ant['distance'] += distance  # Updates distance and time for that specific ant
         ant['time'] += time
 
@@ -196,20 +204,50 @@ class AntColony:
         """
         Update pheromone levels on edges based on the ant's traversal path and objective values.
         """
-
+        # for every edge in the graph
         for edge in self.graph.edges():
-            node1, node2 = edge
+
+            # print(type(edge))
+            # extrapolate the edges nodes
+            node1 = edge[0]
+            node2 = edge[1]
+            # node1, node2, _ = edge
+            # pheromone update equation
             pheromone_update = (1 - self.evaporation_rate) * self.pheromones.get((node1, node2), 0)  # Evaporation
 
-            for path in self.archive.paths_results_archive:  # Iterate through archive
-                if edge in path:  # Check edge presence in the path list
-                    # Use result[0] = distance and result[1] = time
-                    # works out path quality to modify the pheromone update
-                    for result in self.archive.paths_results_archive[path]:
-                        quality = self.distance_weight / result[0] + self.time_weight / result[1]
+            # for every path and result in the archive
+            for path, result in self.archive.paths_results_archive:  # Iterate through archive
+                # for each node pair in the path
+                for i in range(len(path) - 1):  # Iterate using indices
+                    node1 = path[i]
+                    node2 = path[i + 1]
+                    # if the node pair is the same node pair as an edge in the graph
+                    if (node1, node2) == edge:
+                        # works out path quality to modify the pheromone update
+                        print(result)
+                        quality = self.distance_weight / result['Distance'] + self.time_weight / result['Time']
                         pheromone_update += quality
 
-            self.pheromones[(node1, node2)] = pheromone_update
+                    self.pheromones[(node1, node2)] = pheromone_update
+
+    def update_Ph(self):
+
+        for path, result in self.archive.paths_results_archive:  # Iterate through archive
+            # for each node pair in the path
+            for node1, node2 in zip(path, path[1:]):
+                # convert to tuple
+                edge = (node1, node2)
+                # get existing pheromone level for the edge
+                pheromone_level = self.pheromones.get(edge, 0)
+                # Evaporation
+                # this method ensures that if edges have been used multiple times eg stuck ants, they get evaporated multiple times
+                pheromone_level *= (1 - self.evaporation_rate)
+
+                quality = self.distance_weight / result['Distance'] + self.time_weight / result['Time']
+                pheromone_level += quality
+
+                self.pheromones[edge] = pheromone_level
+
 
     def get_best_path(self):
         """
