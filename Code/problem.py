@@ -36,7 +36,7 @@ class ShortestPathProblem:
         totalDist = 0
 
         # iterate through nodes
-        for i in range(len(path - 1)):
+        for i in range(len(path)-1):
             startNode = path[i]  # get the start & end nodes
             endNode = path[i + 1]
             edgeData = self.problemMap.get_edge_data(startNode, endNode)  # work out edge data between them
