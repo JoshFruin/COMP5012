@@ -1,26 +1,20 @@
-# load necessary libraries
 import pandas as pd
 import networkx as nx
 import problem
 from ant_colony_optimiser import AntColony
 from archive import Archive
 from Mutation import select_mutation
-from ant_colony_optimiser import AntColony
-from archive import Archive
+import plot_pareto_front  # Import the module for plotting Pareto front
 
-# load san fransisco map data
+# Load San Francisco map data
 nodes_df = pd.read_csv("nodes_l.csv")
 edges_df = pd.read_csv("edges_l.csv")
 
-# print the data to test
+# Print the data to test
 print(nodes_df.dtypes)
 print(edges_df.dtypes)
 
-# ----------------------------    Test Graph
-
-testGraph = nx.complete_graph(10)
-
-# ------------------------
+# Create the network map
 networkMap = nx.Graph()
 
 for index, row in nodes_df.iterrows():
@@ -33,8 +27,8 @@ for index, row in nodes_df.iterrows():
 
 for index, row in edges_df.iterrows():
     networkMap.add_edge(
-        row['source'],  # source node id
-        row['target'],  # target node id
+        row['source'],  # Source node id
+        row['target'],  # Target node id
         edge_id=row['edge_id'],
         length=row['length'],
         car=row['car'],
@@ -44,32 +38,35 @@ for index, row in edges_df.iterrows():
         foot=row['foot']
     )
 
-# create and set objects
+# Create problem instance and set objects
 prob = problem.ShortestPathProblem(networkMap)
-# prob.displayMap()
 archive = Archive()
 optimiser = AntColony(graph=networkMap, num_ants=100)
 
 # stores iterations results
 progress_results = []
 
+# Mutation parameters
 mutation_type = int(input("Select mutation type (1: random selection, 2: swap, 3: insertion, 4: inversion): "))
-
 mutation_func = select_mutation(mutation_type)
 mutation_rate = 0.1  # Adjust as needed
 
-# changeables
-iterations = 2
+# Hyperparameters
+iterations = 5
 sourceNode = 440853802
 targetNode = 65316450
 
+# Collect results after each iteration
 for i in range(iterations):
-
     optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob, mutation_rate=mutation_rate,  mutation_func=mutation_func)
     print("\n Iteration complete \n")
     best_paths = optimiser.get_best_path()  # Assuming you have this function
     for path, result in best_paths:
-        progress_results.append(result)  # Or another metric you prefer
+        archive.add_solution(path, result)  # Store paths and results in the archive
     optimiser.archive.clear_archive()  # Clear archive for next iteration
 
 print("YAY")
+
+# Plot Pareto front at the end of the loop
+plot_pareto_front.plot_pareto_front(archive)
+
