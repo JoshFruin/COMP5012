@@ -228,20 +228,26 @@ class AntColony:
                     self.pheromones[(node1, node2)] = pheromone_update
 
     def update_Ph(self):
+        max_distance = max(result['Distance'] for _, result in self.archive.paths_results_archive)
+        min_distance = min(result['Distance'] for _, result in self.archive.paths_results_archive)
+        max_time = max(result['Time'] for _, result in self.archive.paths_results_archive)
+        min_time = min(result['Time'] for _, result in self.archive.paths_results_archive)
 
-        for path, result in self.archive.paths_results_archive:  # Iterate through archive
-            # for each node pair in the path
+        for path, result in self.archive.paths_results_archive:
             for node1, node2 in zip(path, path[1:]):
-                # convert to tuple
                 edge = (node1, node2)
-                # get existing pheromone level for the edge
                 pheromone_level = self.pheromones.get(edge, 0)
-                # Evaporation
-                # this method ensures that if edges have been used multiple times eg stuck ants, they get evaporated multiple times
                 pheromone_level *= (1 - self.evaporation_rate)
-
-                quality = self.distance_weight / result['Distance'] + self.time_weight / result['Time']
-                pheromone_level += quality
+            
+                # Scale down the distance and time values
+                normalised_distance = (result['Distance'] - min_distance)/(max_distance - min_distance)
+                normalised_time = (result['Time'] - min_time)/(max_time - min_time)
+            
+                # Adjust the scaling factor based on your problem domain
+                scaling_factor = 0.1
+            
+                # Update the pheromone level
+                pheromone_level += scaling_factor * (self.distance_weight * normalised_distance + self.time_weight * normalised_time)
 
                 self.pheromones[edge] = pheromone_level
 
