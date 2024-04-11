@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import networkx as nx
-import scipy as sp
 
 
 class ShortestPathProblem:
@@ -43,11 +42,11 @@ class ShortestPathProblem:
 
             # get the distance and sL between nodes and speed limit of edge
             distance = edgeData.get("length", 0)
-            speedLimit = edgeData.get("car", 0)
+            speed_rank = edgeData.get("car", 0)
 
             # speed is in the form of 0-6, use speedSwitcher to get actual edge speed
-            speed = self.speedSwitcher(speedLimit)
-            time = distance / speedLimit if speedLimit > 0 else 0
+            speed_limit = self.speedSwitcher(speed_rank)
+            time = distance / speed_limit if speed_limit > 0 else 0
 
             totalDist += distance
             totalTime += time

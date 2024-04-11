@@ -3,7 +3,9 @@ import pandas as pd
 import networkx as nx
 import problem
 from Code.ant_colony_optimiser import AntColony
-from Code.archive import Archive
+from Code.history import History
+from Code.pareto_archive import ParetoArchive
+
 
 # load san fransisco map data
 nodes_df = pd.read_csv("nodes_l.csv")
@@ -44,24 +46,28 @@ for index, row in edges_df.iterrows():
 # create and set objects
 prob = problem.ShortestPathProblem(networkMap)
 # prob.displayMap()
-archive = Archive()
-optimiser = AntColony(graph=networkMap, num_ants=100)
+history = History()
+optimiser = AntColony(graph=networkMap, num_ants=250)
+pareto_front_archive = ParetoArchive()
 
 # stores iterations results
 progress_results = []
 
-# changeables
-iterations = 2
-sourceNode = 440853802
-targetNode = 65316450
+# changeable variables
+iterations = 5
+sourceNode = 65328679
+targetNode = 258967500
 
 for i in range(iterations):
 
+    # run the optimiser for 1 iteration
     optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob)
     print("\n Iteration complete \n")
-    best_paths = optimiser.get_best_path()  # Assuming you have this function
-    for path, result in best_paths:
-        progress_results.append(result)  # Or another metric you prefer
-    optimiser.archive.clear_archive()  # Clear archive for next iteration
+    # get the iterations best path results for sexy pareto graph, WARNING DOES NOT WORK
+    iterations_best_results = optimiser.get_best_path()
+    # Clear Ant path history's for next iteration
+    optimiser.history.clear_history()
+    # print("Iterations archive contains: ", iterations_best_results)
 
 print("YAY")
+pareto_front_archive.archive_print_results()
