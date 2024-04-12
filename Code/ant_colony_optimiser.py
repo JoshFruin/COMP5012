@@ -5,8 +5,8 @@ Created on Thu Mar 21 16:21:20 2024
 @author: R and J with additions by Josh
 """
 import random
-import history
-import pareto_archive
+import archive
+from Mutation import random_selection_mutation
 
 
 # %%
@@ -23,7 +23,7 @@ def dominates(u, v):
 
 class AntColony:
 
-    def __init__(self, graph, num_ants=250, alpha=1, beta=2, evaporation_rate=0.5):
+    def __init__(self, graph, num_ants=10, alpha=1, beta=2, evaporation_rate=0.5):
         """
         Initialize the Ant Colony Optimization algorithm.
 
@@ -40,19 +40,26 @@ class AntColony:
         self.alpha = alpha
         self.beta = beta
         self.evaporation_rate = evaporation_rate
-        # self.pheromones = {node: {neighbor: 1 for neighbor in graph.neighbors(node)} for node in graph.nodes}
-        self.pheromones = self.initialize_pheromones()
-        self.history = history.History()  # init the ant paths history
+        self.pheromones = {node: {neighbor: 1 for neighbor in graph.neighbors(node)} for node in graph.nodes}
+        self.archive = archive.Archive()  # init the ant paths archive
         self.distance_weight = 0.5  # the importance of distance vs time, scale: 0-1
         self.time_weight = 0.5
-        self.pareto_archive = pareto_archive.ParetoArchive()  # initialise the archive
 
-    def run(self, source_node, target_node, problem):
+    def run(self, source_node, target_node, problem, mutation_rate, mutation_func):
+        """
+        Run the Ant Colony Optimization algorithm.
 
+        Args:
+        - source_node: The starting node for the path.
+        - target_node: The target node for the path.
+        - problem: An instance of the problem to be solved.
+        - mutation_rate: Probability of applying mutation to the solution.
+        - mutation_func: The mutation function to be applied.
+        """
         # runs all the ants in the iteration
         for anti in range(self.num_ants):
-            self.run_ant(source_node, target_node, problem)
-            # print("Complete Ant Cycle \n")
+            self.run_ant(source_node, target_node, problem, mutation_rate, mutation_func)
+            print("Complete Ant Cycle \n")
 
         # update all pheromones
         self.update_Ph()
@@ -66,8 +73,8 @@ class AntColony:
         """
         pheromones = {}  # Dict that stores pheromone levels as a tuple
         for edge in self.graph.edges:  # Iterates through all edges
-            node1, node2 = edge  # Set edge source and target IDs
-            pheromones[(node1, node2)] = 0  # Start edge pheromone with a uniform base value of 1
+            u, v = edge  # Set edge source and target IDs
+            pheromones[(u, v)] = 0  # Start edge pheromone with a uniform base value of 1
 
         print("Starting Pheromones initialised")
         return pheromones  # Keep for now, perhaps not needed
@@ -87,7 +94,7 @@ class AntColony:
         unvisited = [node for node in neighbors if
                      node not in ant['visited']]  # Create list of unvisited potential next neighboring nodes
 
-        u_probabilities = {}  # Initialize probability dictionary
+        probabilities = {}  # Initialize probability dictionary
         total_prob = 0  # Initialize variable (should end up as 1)
 
         if len(unvisited) > 0:
@@ -111,13 +118,12 @@ class AntColony:
                             1 / time) * self.time_weight  # Create heuristic to guide ants
 
                     # Pheromone Influence
-                    pheromone = self.pheromones.get((ant['current_node'], node), 0)
+                    pheromone = self.pheromones.get((ant['current_node'], node), 1)
 
-                    u_probabilities[node] = ((pheromone ** self.alpha) * (
+                    probabilities[node] = ((pheromone ** self.alpha) * (
                             heuristic ** self.beta))  # Probability of traveling to target node using pheromone
                     # importance and heuristic
-
-                    total_prob += u_probabilities[node]  # Should be 1
+                    total_prob += probabilities[node]  # Should be 1
 
                 else:
                     continue  # NEED TO COME UP WITH A BETTER IDEA HERE, THE ANTS ARE JUST TERMINATING
@@ -127,9 +133,8 @@ class AntColony:
 
         # Probabilistic Selection
         if total_prob > 0:  # Check there are valid nodes to move to
-            nodes = list(u_probabilities.keys())  # Extract key values and convert to list
-            node_weights = [u_probabilities[node] / total_prob for node in nodes]  # Normalized probabilities
-            # LOOK UP HOW THIS RANDOM FUNCTION WORKS, MAKE AN EXPLORATION RATE.
+            nodes = list(probabilities.keys())  # Extract key values and convert to list
+            node_weights = [probabilities[node] / total_prob for node in nodes]  # Normalized probabilities
             next_node = random.choices(nodes, weights=node_weights)[0]  # Random aspect to guided node choice
         else:
             # If all probabilities were 0 or all nodes inaccessible (e.g., trapped ant), choose randomly
@@ -139,16 +144,19 @@ class AntColony:
 
         return next_node
 
-    def run_ant(self, start_node, target_node, problem):
+    def run_ant(self, start_node, target_node, problem, mutation_rate, mutation_func):
         """
         Simulate the movement of an ant from a start node to the target node.
 
         Args:
         - start_node: Node ID from which the ant starts its journey.
+        - target_node: The target node for the path.
         - problem: Problem instance to evaluate the solution path.
+        - mutation_rate: Probability of applying mutation to the solution.
+        - mutation_func: The mutation function to be applied.
 
         Returns:
-        - result: Result of the ant's journey based on the problem evaluation.
+        - result: Result of the ant's   journey based on the problem evaluation.
         """
         ant = {'current_node': start_node, 'visited': [start_node], 'distance': 0,
                'time': 0}  # Initialize list of visited nodes with the start node as it's been visited
@@ -156,12 +164,14 @@ class AntColony:
         while ant['current_node'] != target_node:  # While ant has not reached the target node, it selects the next node
             next_node = self._select_next_node(ant, problem)  # Need the move_ant
             self._move_ant(ant, next_node, problem)
+            # Apply mutation
+            ant['visited'] = mutation_func(ant['visited'], mutation_rate)
 
         # Final Evaluation Here:
         path = ant['visited']  # The complete path taken by the ant, nodes visited
         # print(path)
         result = problem.evaluate(path)  # Use your ShortestPathProblem class
-        self.history.add_solution(path, result)
+        self.archive.add_solution(path, result)
         # self.archive.print_path()
 
     def _move_ant(self, ant, next_node, problem):
@@ -203,7 +213,7 @@ class AntColony:
             pheromone_update = (1 - self.evaporation_rate) * self.pheromones.get((node1, node2), 0)  # Evaporation
 
             # for every path and result in the archive
-            for path, result in self.history.paths_results_history:  # Iterate through archive
+            for path, result in self.archive.paths_results_archive:  # Iterate through archive
                 # for each node pair in the path
                 for i in range(len(path) - 1):  # Iterate using indices
                     node1 = path[i]
@@ -218,90 +228,46 @@ class AntColony:
                     self.pheromones[(node1, node2)] = pheromone_update
 
     def update_Ph(self):
+        max_distance = max(result['Distance'] for _, result in self.archive.paths_results_archive)
+        min_distance = min(result['Distance'] for _, result in self.archive.paths_results_archive)
+        max_time = max(result['Time'] for _, result in self.archive.paths_results_archive)
+        min_time = min(result['Time'] for _, result in self.archive.paths_results_archive)
 
-        max_distance = max(result['Distance'] for _, result in self.history.paths_results_history)
-        max_time = max(result['Time'] for _, result in self.history.paths_results_history)
-
-        for path, result in self.history.paths_results_history:  # Iterate through ants path history
-            # for each node pair in the path
+        for path, result in self.archive.paths_results_archive:
             for node1, node2 in zip(path, path[1:]):
-                # convert to tuple
                 edge = (node1, node2)
-                # get existing pheromone level for the edge
                 pheromone_level = self.pheromones.get(edge, 0)
-                # Evaporation, this method ensures that if edges have been used multiple times eg stuck ants,
-                # they get evaporated multiple times
                 pheromone_level *= (1 - self.evaporation_rate)
-
+            
                 # Scale down the distance and time values
-                scaled_distance = result['Distance'] / max_distance
-                scaled_time = result['Time'] / max_time
-
+                normalised_distance = (result['Distance'] - min_distance)/(max_distance - min_distance)
+                normalised_time = (result['Time'] - min_time)/(max_time - min_time)
+            
                 # Adjust the scaling factor based on your problem domain
-                scaling_factor = 10
-
+                scaling_factor = 0.1
+            
                 # Update the pheromone level
-                pheromone_level += scaling_factor * (
-                            self.distance_weight * scaled_distance + self.time_weight * scaled_time)
+                pheromone_level += scaling_factor * (self.distance_weight * normalised_distance + self.time_weight * normalised_time)
 
                 self.pheromones[edge] = pheromone_level
 
-                # quality = self.distance_weight / result['Distance'] + self.time_weight / result['Time']
-                # pheromone_level += quality
-
-                # self.pheromones[edge] = pheromone_level
 
     def get_best_path(self):
         """
         Retrieves the best path(s) from the archive based on Pareto dominance.
         """
-        iteration_pareto_archive = []
-
-        # gets a path and the evaluated path result from the history
-        for path_new, result_new in self.history.paths_results_history:
-            dominated = False  # assume new solution is suitable for the archive
-            if len(self.pareto_archive.pareto_archive) > 0:
-                # checks against every result in the archive
-                for archive_path, archive_result in self.pareto_archive.pareto_archive:
-                    if dominates(archive_result, result_new):  # Check if archive_result dominates new result
-                        dominated = True  # new result cannot enter archive
-                        break
+        pareto_optimal_solutions = []
+        for path, result in self.archive.paths_results_archive:
+            dominated = False
+            for other_path, other_result in self.archive.paths_results_archive:
+                if dominates(result, other_result):  # Check if our result is dominated
+                    dominated = True
+                    break
 
             if not dominated:
-                # create new list to store results to be removed
-                remove_from_archive = []
+                pareto_optimal_solutions.append((path, result))
 
-                # checks if the result dominates anything in the archive
-                for archive_path, archive_result in self.pareto_archive.pareto_archive:
-                    if dominates(result_new, archive_result):
-                        # remove archive_result from pareto_archive, add it so the removal list
-                        removal_entry = (archive_path, archive_result)
-                        remove_from_archive.append(removal_entry)
-                        for r in iteration_pareto_archive:
-                            if dominates(result_new, r):
-                                iteration_pareto_archive.remove(r)
-                    else:
-                        continue
-
-                # Looks through the remove from archive list and removes the path and result from the archive
-                for path, result in remove_from_archive:
-                    try:
-                        self.pareto_archive.pareto_archive.remove((path, result))  # Try to remove an exact match
-                    except ValueError:  # Handle cases where the tuple might not be present
-                        pass
-
-                # add it to the iterations archive
-                iteration_pareto_archive.append(result_new)
-
-                # append the archive with the new non dominated result
-                self.pareto_archive.pareto_archive.append((path_new, result_new))
-
-        print("archive contains: ")
-        self.pareto_archive.archive_print_results()
-
-        # return this iterations archive
-        return iteration_pareto_archive
-        # returns all the non dominating solutions of that iteration
+        return pareto_optimal_solutions
 
     # %%
 

@@ -1,6 +1,6 @@
 import pandas as pd
 import networkx as nx
-import problem
+import random
 from ant_colony_optimiser import AntColony
 from pareto_archive import ParetoArchive
 #from Mutation import select_mutation, mutate_solution
@@ -8,8 +8,8 @@ import plot_pareto_front  # Import the module for plotting Pareto front
 from problem import ShortestPathProblem
 
 # Load San Francisco map data
-nodes_df = pd.read_csv("nodes_l.csv")
-edges_df = pd.read_csv("edges_l.csv")
+nodes_df = pd.read_csv(r"C:\Users\Ciaran Keating\Documents\GitHub\COMP5012\Code\nodes_l.csv")
+edges_df = pd.read_csv(r"C:\Users\Ciaran Keating\Documents\GitHub\COMP5012\Code\edges_l.csv")
 
 # Print the data to test
 print(nodes_df.dtypes)
@@ -38,6 +38,24 @@ for index, row in edges_df.iterrows():
         bike_reverse=row['bike_reverse'],
         foot=row['foot']
     )
+
+# Create an empty graph
+testG = nx.Graph()
+
+# Add 20 nodes
+testG.add_nodes_from(range(1, 21))
+
+# Add edges between all pairs of nodes with random lengths and times
+for u in range(1, 21):
+    for v in range(u + 1, 21):
+        length = random.randint(1, 20)  # Random length
+        time = random.randint(1, 6)     # Random time between 1 and 6
+        testG.add_edge(u, v, length=length, time=time)  # Assign random length and time to each edge
+
+# Print edge data
+for u, v, data in testG.edges(data=True):
+    print(f"Edge between nodes {u} and {v} with length {data['length']} and time {data['time']}")
+
 
 # Create problem instance and set objects
 prob = ShortestPathProblem(networkMap)
