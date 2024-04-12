@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import networkx as nx
-import scipy as sp
 
 
 class ShortestPathProblem:
@@ -15,14 +14,6 @@ class ShortestPathProblem:
         print("middle")
         nx.draw(self.problemMap, positions, with_labels=True, node_size=300)
         print("Layout Calculated")
-        plt.show()
-
-    def visualize_graph(self):
-        """
-        Visualize the graph using matplotlib and networkx.
-        """
-        positions = nx.spring_layout(self.problemMap, iterations=10)
-        nx.draw(self.problemMap, positions, with_labels=True, node_size=300)
         plt.show()
 
     def speedSwitcher(self, choice):
@@ -44,27 +35,20 @@ class ShortestPathProblem:
         totalDist = 0
 
         # iterate through nodes
-        for i in range(len(path) - 1):
+        for i in range(len(path)-1):
             startNode = path[i]  # get the start & end nodes
             endNode = path[i + 1]
-            edgeData = self.problemMap.get_edge_data(startNode, endNode)
+            edgeData = self.problemMap.get_edge_data(startNode, endNode)  # work out edge data between them
 
-            # Check if edge data exists
-            if edgeData is not None:
-                # get the distance and sL between nodes and speed limit of edge
-                distance = edgeData.get("length", 0)
-                speedLimit = edgeData.get("car", 0)
+            # get the distance and sL between nodes and speed limit of edge
+            distance = edgeData.get("length", 0)
+            speed_rank = edgeData.get("car", 0)
 
-                # speed is in the form of 0-6, use speedSwitcher to get actual edge speed
-                speed = self.speedSwitcher(speedLimit)
-                time = distance / speedLimit if speedLimit > 0 else 0
+            # speed is in the form of 0-6, use speedSwitcher to get actual edge speed
+            speed_limit = self.speedSwitcher(speed_rank)
+            time = distance / speed_limit if speed_limit > 0 else 0
 
-                totalDist += distance
-                totalTime += time
-            else:
-                # Handle case where edge data does not exist
-                print(f"No edge data found between nodes {startNode} and {endNode}")
+            totalDist += distance
+            totalTime += time
 
         return {"Distance": totalDist, "Time": totalTime}
-
-
