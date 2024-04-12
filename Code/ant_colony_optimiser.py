@@ -220,7 +220,9 @@ class AntColony:
     def update_Ph(self):
 
         max_distance = max(result['Distance'] for _, result in self.history.paths_results_history)
+        min_distance = min(result['Distance'] for _, result in self.history.paths_results_history)
         max_time = max(result['Time'] for _, result in self.history.paths_results_history)
+        min_time = min(result['Time'] for _, result in self.history.paths_results_history)
 
         for path, result in self.history.paths_results_history:  # Iterate through ants path history
             # for each node pair in the path
@@ -229,20 +231,24 @@ class AntColony:
                 edge = (node1, node2)
                 # get existing pheromone level for the edge
                 pheromone_level = self.pheromones.get(edge, 0)
-                # Evaporation, this method ensures that if edges have been used multiple times eg stuck ants,
+                # Evaporation, this method ensures that if edges have been used multiple times e.g. stuck ants,
                 # they get evaporated multiple times
                 pheromone_level *= (1 - self.evaporation_rate)
 
                 # Scale down the distance and time values
-                scaled_distance = result['Distance'] / max_distance
-                scaled_time = result['Time'] / max_time
+                # scaled_distance = result['Distance'] / max_distance
+                # scaled_time = result['Time'] / max_time
+
+                # Scale down the distance and time values  Ciaran's code
+                normalised_distance = (result['Distance'] - min_distance) / (max_distance - min_distance)
+                normalised_time = (result['Time'] - min_time) / (max_time - min_time)
 
                 # Adjust the scaling factor based on your problem domain
-                scaling_factor = 10
+                scaling_factor = 0.1
 
                 # Update the pheromone level
                 pheromone_level += scaling_factor * (
-                            self.distance_weight * scaled_distance + self.time_weight * scaled_time)
+                        self.distance_weight * normalised_distance + self.time_weight * normalised_time)
 
                 self.pheromones[edge] = pheromone_level
 
@@ -255,7 +261,6 @@ class AntColony:
         """
         Retrieves the best path(s) from the archive based on Pareto dominance.
         """
-        iteration_pareto_archive = []
 
         # gets a path and the evaluated path result from the history
         for path_new, result_new in self.history.paths_results_history:
@@ -271,15 +276,14 @@ class AntColony:
                 # create new list to store results to be removed
                 remove_from_archive = []
 
+                # CHECK WITH REEF
                 # checks if the result dominates anything in the archive
                 for archive_path, archive_result in self.pareto_archive.pareto_archive:
                     if dominates(result_new, archive_result):
                         # remove archive_result from pareto_archive, add it so the removal list
                         removal_entry = (archive_path, archive_result)
                         remove_from_archive.append(removal_entry)
-                        for r in iteration_pareto_archive:
-                            if dominates(result_new, r):
-                                iteration_pareto_archive.remove(r)
+
                     else:
                         continue
 
@@ -290,9 +294,6 @@ class AntColony:
                     except ValueError:  # Handle cases where the tuple might not be present
                         pass
 
-                # add it to the iterations archive
-                iteration_pareto_archive.append(result_new)
-
                 # append the archive with the new non dominated result
                 self.pareto_archive.pareto_archive.append((path_new, result_new))
 
@@ -300,7 +301,7 @@ class AntColony:
         self.pareto_archive.archive_print_results()
 
         # return this iterations archive
-        return iteration_pareto_archive
+        return [archived_result[1] for archived_result in self.pareto_archive.pareto_archive]
         # returns all the non dominating solutions of that iteration
 
     # %%
