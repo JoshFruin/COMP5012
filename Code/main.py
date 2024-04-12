@@ -50,14 +50,14 @@ mutation_func = select_mutation(mutation_type)"""
 mutation_rate = 0.1  # Adjust as needed
 
 # Other Hyperparameters
-iterations = 5
+iterations = 2
 sourceNode = 440853802
 targetNode = 65316450
 
 # Collect results after each iteration
 for i in range(iterations):
     optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob) #, mutation_rate=mutation_rate, mutation_func=mutation_func)
-    print("\n Iteration complete \n")
+    print(f"\n Iteration complete \n")
     # get the iterations best path results for sexy pareto graph, WARNING DOES NOT WORK
     iterations_best_results = optimiser.get_best_path()
     # Clear Ant path history's for next iteration
@@ -66,4 +66,5 @@ for i in range(iterations):
 
 print("YAY")
 
+# Plot Pareto front at the end of the loop
 pareto_front_archive.archive_print_results()
