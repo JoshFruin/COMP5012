@@ -39,10 +39,11 @@ class AntColony:
         self.alpha = alpha
         self.beta = beta
         self.evaporation_rate = evaporation_rate
-        self.pheromones = {node: {neighbor: 1 for neighbor in graph.neighbors(node)} for node in graph.nodes}
+        #self.pheromones = {node: {neighbor: 1 for neighbor in graph.neighbors(node)} for node in graph.nodes}
         self.archive = archive.Archive()  # init the ant paths archive
         self.distance_weight = 0.5  # the importance of distance vs time, scale: 0-1
         self.time_weight = 0.5
+        self.pheromones = self.initialize_pheromones(self) # init pheromones based on edge length
 
     def run(self, source_node, target_node, problem):
 
@@ -54,20 +55,37 @@ class AntColony:
         # update all pheromones
         self.update_Ph()
 
-    def initialize_pheromones(self):
+    #def initialize_pheromones(self):
         """
         Initialize pheromone levels on edges of the graph.
 
         Returns:
         - pheromones (dict): Dictionary storing pheromone levels on edges.
         """
-        pheromones = {}  # Dict that stores pheromone levels as a tuple
-        for edge in self.graph.edges:  # Iterates through all edges
+        #pheromones = {}  # Dict that stores pheromone levels as a tuple
+        #for edge in self.graph.edges:  # Iterates through all edges
             u, v = edge  # Set edge source and target IDs
             pheromones[(u, v)] = 0  # Start edge pheromone with a uniform base value of 1
 
-        print("Starting Pheromones initialised")
-        return pheromones  # Keep for now, perhaps not needed
+        #print("Starting Pheromones initialised")
+        #return pheromones  # Keep for now, perhaps not needed
+        
+    def initialize_pheromones(self):
+        """
+        Initialize pheromone levels on edges of the graph based on edge lengths.
+    
+        Args:
+          - graph (networkx.Graph): Network used to calculate initial pheromones.
+    
+        Returns:
+          - pheromones (dict): Dictionary storing initial pheromone levels on edges.
+        """
+        pheromones = {}
+        for u, v, data in self.graph.edges(data=True):
+            length = data.get('length', 1)  # Default to 1 if no length is provided
+            pheromones[(u, v)] = 1 / length  # Set pheromone level inversely proportional to edge length
+        return pheromones
+    
 
     def _select_next_node(self, ant, problem):
         """
@@ -229,6 +247,36 @@ class AntColony:
                 pheromone_level += quality
 
                 self.pheromones[edge] = pheromone_level
+               
+     def update_Ph(self):
+        
+
+        # Rank paths in the archive based on Pareto dominance (higher rank = better)
+        ranked_paths = sorted(self.archive.paths_results_archive, key=lambda x: self.get_rank(x[1]), reverse=True)
+
+        for rank, (path, result) in enumerate(ranked_paths):
+            # Quality based on rank with power function weighting
+            weight = (rank + 1) ** (-alpha)  # alpha controls weighting emphasis # EXPERIMENT w/ alpha
+
+            quality = self.distance_weight * (1 - result['Distance']) + self.time_weight * (1 - result['Time'])  # Can be inside or outside weight function
+            quality *= weight  # Apply weight to quality
+
+              # update pheromone level using quality
+            pheromone_level += quality
+            self.pheromones[edge] = pheromone_level
+            
+    def get_rank(self, result):
+        """
+        Args: Result ([path], [dis & time])
+        Rank the paths in order of their pareto dominance to feed into the update Ph function that will
+        update the pheromones according to whether the edge is included in a path that highly ranked or vice versa.
+        Higher-ranked paths (less dominated) get a higher quality score.
+        """
+        dominated_count = 0
+        for other_path, other_result in self.archive.paths_results_archive:
+            if self.dominates(other_result, result):  # Check if other solution dominates current result
+                dominated_count += 1
+        return dominated_count + 1  # Rank starts from 1 (higher count means more dominated by others)
 
 
     def get_best_path(self):
