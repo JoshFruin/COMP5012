@@ -83,7 +83,6 @@ targetNode = 65316450
     optimiser.history.clear_history()
     # print("Iterations archive contains: ", iterations_best_results)"""
 # Collect results after each iteration
-# Collect results after each iteration
 for i in range(iterations):
     optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob)
     print(f"\n Iteration {i+1} complete \n")
@@ -99,6 +98,24 @@ for i in range(iterations):
 
 
 print("YAY")
+
+# Inspect contents of Pareto archive
+print("Contents of Pareto Archive:")
+for path, result in pareto_front_archive.pareto_archive:
+    print("Path:", path)
+    print("Result:", result)
+from ant_colony_optimiser import dominates
+# Check for Pareto dominance
+print("Checking for Pareto dominance:")
+for path1, result1 in pareto_front_archive.pareto_archive:
+    is_pareto_optimal = True
+    for path2, result2 in pareto_front_archive.pareto_archive:
+        if path1 != path2 and dominates(result2, result1):
+            is_pareto_optimal = False
+            break
+    if is_pareto_optimal:
+        print("Path:", path1)
+        print("Result:", result1, "(Pareto optimal)")
 
 # Plot Pareto front at the end of the loop
 pareto_front_archive.archive_print_results()
