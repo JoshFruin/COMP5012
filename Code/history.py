@@ -1,3 +1,4 @@
+
 class History:
     def __init__(self):
         self.paths_results_history = []
