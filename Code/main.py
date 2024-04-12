@@ -3,13 +3,14 @@ import networkx as nx
 import random
 from ant_colony_optimiser import AntColony
 from pareto_archive import ParetoArchive
+from history import History
 #from Mutation import select_mutation, mutate_solution
 import plot_pareto_front  # Import the module for plotting Pareto front
 from problem import ShortestPathProblem
 
 # Load San Francisco map data
-nodes_df = pd.read_csv(r"C:\Users\Ciaran Keating\Documents\GitHub\COMP5012\Code\nodes_l.csv")
-edges_df = pd.read_csv(r"C:\Users\Ciaran Keating\Documents\GitHub\COMP5012\Code\edges_l.csv")
+nodes_df = pd.read_csv("nodes_l.csv")
+edges_df = pd.read_csv("edges_l.csv")
 
 # Print the data to test
 print(nodes_df.dtypes)
@@ -73,16 +74,34 @@ sourceNode = 440853802
 targetNode = 65316450
 
 # Collect results after each iteration
-for i in range(iterations):
+"""for i in range(iterations):
     optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob) #, mutation_rate=mutation_rate, mutation_func=mutation_func)
     print(f"\n Iteration complete \n")
     # get the iterations best path results for sexy pareto graph, WARNING DOES NOT WORK
     iterations_best_results = optimiser.get_best_path()
     # Clear Ant path history's for next iteration
     optimiser.history.clear_history()
-    # print("Iterations archive contains: ", iterations_best_results)
+    # print("Iterations archive contains: ", iterations_best_results)"""
+# Collect results after each iteration
+# Collect results after each iteration
+for i in range(iterations):
+    optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob)
+    print(f"\n Iteration {i+1} complete \n")
+
+    # Inspect evaluated paths and results
+    for path, result in optimiser.history.paths_results_history:
+        print("Evaluated Path:", path)
+        print("Evaluation Result:", result)
+
+        # Add evaluated paths and results to Pareto archive
+        pareto_front_archive.add_result(path, result)
+
+
 
 print("YAY")
 
 # Plot Pareto front at the end of the loop
 pareto_front_archive.archive_print_results()
+
+# Plot Pareto front at the end of the loop
+plot_pareto_front.plot_pareto_front(pareto_front_archive)
