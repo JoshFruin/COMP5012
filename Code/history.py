@@ -14,3 +14,6 @@ class History:
     def clear_history(self):
         """Clears all path and result data from the archive."""
         self.paths_results_history = []  # Reset to an empty list
+
+    def add_to_history(self, solution):
+        self.paths_results_history.append(solution)

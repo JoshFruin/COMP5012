@@ -7,6 +7,7 @@ Created on Thu Mar 21 16:21:20 2024
 import random
 import history
 import pareto_archive
+from Mutation import  random_selection_mutation
 
 # this is the functional class, others are drafts or templates
 def dominates(u, v):
@@ -135,33 +136,7 @@ class AntColony:
 
         return next_node
 
-    def mutate_solution(self, solution):
-        """
-        Apply Random Selection mutation to the solution.
-
-        Args:
-        - solution (list): The solution (path) to be mutated.
-
-        Returns:
-        - mutated_solution (list): The mutated solution.
-        """
-        # Make a copy of the original solution
-        mutated_solution = solution[:]
-
-        # Perform mutation by randomly selecting a node to replace
-        if mutated_solution:
-            # Choose a random index within the solution length
-            mutate_index = random.randint(0, len(mutated_solution) - 1)
-
-            # Generate a random node to replace the node at mutate_index
-            new_node = random.choice(list(self.graph.nodes()))
-
-            # Replace the node at mutate_index with the new node
-            mutated_solution[mutate_index] = new_node
-
-        return mutated_solution
-
-    def run_ant(self, start_node, target_node, problem):
+    def run_ant(self, source_node, target_node, problem):
         """
         Simulate the movement of an ant from a start node to the target node.
 
@@ -170,18 +145,30 @@ class AntColony:
         - target_node: Node ID representing the target destination.
         - problem: Problem instance to evaluate the solution path.
         """
-        ant = {'current_node': start_node, 'visited': [start_node], 'distance': 0, 'time': 0}
+        ant = {'visited': [], 'path': [], 'current_node': source_node}  # Initialize ant's path and current node
 
-        while ant['current_node'] != target_node:
-            next_node = self._select_next_node(ant, problem)
-            self._move_ant(ant, next_node, problem)
+        while ant['current_node'] != target_node:  # While the target node has not been reached
+            ant['visited'].append(ant['current_node'])  # Mark the current node as visited
+            ant['path'].append(ant['current_node'])  # Append the current node to the ant's path
+            ant['current_node'] = self._select_next_node(ant, problem)  # Move the ant to the next node
 
-        path = ant['visited']
-        result = problem.evaluate(path)
+            if ant['current_node'] is None:  # If there are no more unvisited nodes
+                break  # End the loop
 
-        # Apply mutation to the solution before adding it to the history
-        mutated_solution = self.mutate_solution(path)
-        self.history.add_solution(mutated_solution, problem.evaluate(mutated_solution))
+        if ant['current_node'] == target_node:  # If the ant has reached the target node
+            ant['path'].append(ant['current_node'])  # Add the target node to the path
+
+            # Mutation occurs here, returned as a list
+            mutated_path = random_selection_mutation(ant['path'],
+                                                     self.graph)  # Pass the path and graph to the mutation function
+            mutated_result = problem.evaluate(mutated_path)  # Evaluate the mutated path
+
+            # Add the mutated solution to the history
+            self.history.add_solution(mutated_path, mutated_result)
+
+            # Update the Pareto Archive with the solution
+            self.pareto_archive.add_result(mutated_path, mutated_result)
+
 
     def _move_ant(self, ant, next_node, problem):
         """
