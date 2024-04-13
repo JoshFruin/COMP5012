@@ -135,30 +135,53 @@ class AntColony:
 
         return next_node
 
+    def mutate_solution(self, solution):
+        """
+        Apply Random Selection mutation to the solution.
+
+        Args:
+        - solution (list): The solution (path) to be mutated.
+
+        Returns:
+        - mutated_solution (list): The mutated solution.
+        """
+        # Make a copy of the original solution
+        mutated_solution = solution[:]
+
+        # Perform mutation by randomly selecting a node to replace
+        if mutated_solution:
+            # Choose a random index within the solution length
+            mutate_index = random.randint(0, len(mutated_solution) - 1)
+
+            # Generate a random node to replace the node at mutate_index
+            new_node = random.choice(list(self.graph.nodes()))
+
+            # Replace the node at mutate_index with the new node
+            mutated_solution[mutate_index] = new_node
+
+        return mutated_solution
+
     def run_ant(self, start_node, target_node, problem):
         """
         Simulate the movement of an ant from a start node to the target node.
 
         Args:
         - start_node: Node ID from which the ant starts its journey.
+        - target_node: Node ID representing the target destination.
         - problem: Problem instance to evaluate the solution path.
-
-        Returns:
-        - result: Result of the ant's journey based on the problem evaluation.
         """
-        ant = {'current_node': start_node, 'visited': [start_node], 'distance': 0,
-               'time': 0}  # Initialize list of visited nodes with the start node as it's been visited
+        ant = {'current_node': start_node, 'visited': [start_node], 'distance': 0, 'time': 0}
 
-        while ant['current_node'] != target_node:  # While ant has not reached the target node, it selects the next node
-            next_node = self._select_next_node(ant, problem)  # Need the move_ant
+        while ant['current_node'] != target_node:
+            next_node = self._select_next_node(ant, problem)
             self._move_ant(ant, next_node, problem)
 
-        # Final Evaluation Here:
-        path = ant['visited']  # The complete path taken by the ant, nodes visited
-        # print(path)
-        result = problem.evaluate(path)  # Use your ShortestPathProblem class
-        self.history.add_solution(path, result)
-        # self.archive.print_path()
+        path = ant['visited']
+        result = problem.evaluate(path)
+
+        # Apply mutation to the solution before adding it to the history
+        mutated_solution = self.mutate_solution(path)
+        self.history.add_solution(mutated_solution, problem.evaluate(mutated_solution))
 
     def _move_ant(self, ant, next_node, problem):
         """
@@ -168,7 +191,6 @@ class AntColony:
         - ant (dict): Ant's information including current node and visited nodes.
         - next_node: Next node to which the ant will move.
         """
-
         # Update distance and time traveled
         edge_data = self.graph.get_edge_data(ant['current_node'], next_node)
         distance = edge_data.get('length', 0)  # Check variables with the CSV

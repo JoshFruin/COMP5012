@@ -28,24 +28,46 @@ def select_mutation(mutation_type):
   else:
     raise ValueError("Invalid mutation type")
 
-def random_selection_mutation(solution, mutation_rate):
-  """
-  Performs random selection mutation on a solution path.
 
-  Args:
-      solution: A list representing the current solution path.
-      mutation_rate: Probability of applying mutation to the solution.
+def random_selection_mutation(solution, networkMap):
+  mutated_solution = solution[:]  # Make a copy of the original solution
 
-  Returns:
-      A new list with the mutated solution path.
-  """
-  if random.random() < mutation_rate:  # Apply mutation with a probability
-    city1 = random.randint(0, len(solution) - 1)
-    city2 = random.randint(0, len(solution) - 1)
-    while city1 == city2:
-      city2 = random.randint(0, len(solution) - 1)  # Ensure different cities
-    solution[city1], solution[city2] = solution[city2], solution[city1]
-  return solution
+  # Print original solution for debugging
+  print("Original Solution:", solution)
+
+  # Randomly select two distinct nodes in the solution
+  node1, node2 = random.sample(mutated_solution, 2)
+
+  # Print selected nodes for debugging
+  print("Selected Nodes:", node1, node2)
+
+  # Get all edges adjacent to node1 and node2
+  adjacent_edges_node1 = list(networkMap.edges(node1))
+  adjacent_edges_node2 = list(networkMap.edges(node2))
+
+  # If there are no adjacent edges for either node, skip mutation for this pair
+  if not adjacent_edges_node1 or not adjacent_edges_node2:
+    print("No adjacent edges found for one or both nodes. Skipping mutation.")
+    return mutated_solution
+
+  # Print adjacent edges to nodes for debugging
+  print("Adjacent edges to node1:", adjacent_edges_node1)
+  print("Adjacent edges to node2:", adjacent_edges_node2)
+
+  # Randomly select an edge adjacent to node1
+  edge = random.choice(adjacent_edges_node1)
+
+  # Print selected edge for debugging
+  print("Selected Edge:", edge)
+
+  # Replace the edge in the solution with a random edge adjacent to node2
+  mutated_solution[mutated_solution.index(node1)] = node2
+  mutated_solution[mutated_solution.index(node2)] = node1
+
+  # Print mutated solution for debugging
+  print("Mutated Solution:", mutated_solution)
+
+  return mutated_solution
 
 
 def swap_mutation(solution, mutation_rate):

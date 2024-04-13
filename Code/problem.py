@@ -35,10 +35,15 @@ class ShortestPathProblem:
         totalDist = 0
 
         # iterate through nodes
-        for i in range(len(path)-1):
+        for i in range(len(path) - 1):
             startNode = path[i]  # get the start & end nodes
             endNode = path[i + 1]
-            edgeData = self.problemMap.get_edge_data(startNode, endNode)  # work out edge data between them
+
+            # Check if there is edge data for the current edge
+            edgeData = self.problemMap.get_edge_data(startNode, endNode)
+            if edgeData is None:
+                print(f"No edge data found for edge between nodes {startNode} and {endNode}")
+                continue
 
             # get the distance and sL between nodes and speed limit of edge
             distance = edgeData.get("length", 0)
