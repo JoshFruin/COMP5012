@@ -1,7 +1,7 @@
 import pandas as pd
 import networkx as nx
 import random
-from ant_colony_optimiser import AntColony
+from ant_colony_optimiser import AntColony, dominates
 from pareto_archive import ParetoArchive
 from history import History
 from Mutation import select_mutation, random_selection_mutation
@@ -70,7 +70,7 @@ mutation_func = select_mutation(mutation_type)"""
 mutation_rate = 0.1  # Adjust as needed
 
 # Other Hyperparameters
-iterations = 2
+iterations = 10
 sourceNode = 440853802
 targetNode = 65316450
 max_mutation_attempts = 1
@@ -94,9 +94,13 @@ for i in range(iterations):
     for ant_path, ant_result in optimiser.history.paths_results_history:
         mutation_attempts = 0
         while mutation_attempts < max_mutation_attempts:
-            mutated_solution = random_selection_mutation(ant_path, networkMap)  # Use random_selection_mutation
+            mutated_solution = random_selection_mutation(ant_path, networkMap)
             mutated_result = prob.evaluate(mutated_solution)
-            if not pareto_front_archive.contains(mutated_solution):
+
+            # Check if the mutated solution is non-dominated and unique
+            if not pareto_front_archive.contains(mutated_solution) and \
+                    not any(dominates(archive_result, mutated_result) for _, archive_result in
+                            pareto_front_archive.pareto_archive):
                 optimiser.history.add_solution(mutated_solution, mutated_result)
                 pareto_front_archive.add_result(mutated_solution, mutated_result)
                 break
