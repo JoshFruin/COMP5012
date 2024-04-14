@@ -1,3 +1,4 @@
+from pareto_utils import dominates
 class ParetoArchive:
 
     def __init__(self):
@@ -27,5 +28,6 @@ class ParetoArchive:
             if path == solution:
                 return True
         return False
+
 
 

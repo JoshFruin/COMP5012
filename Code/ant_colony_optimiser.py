@@ -8,15 +8,15 @@ import random
 import history
 import pareto_archive
 from Mutation import  random_selection_mutation
+from pareto_utils import dominates
 
 # this is the functional class, others are drafts or templates
-def dominates(u, v):
-    """
+"""def dominates(u, v):
+    
     Checks if solution 'u' dominates solution 'v' in a multi-objective context.
-    """
-    return (u["Distance"] <= v["Distance"] and u["Time"] <= v["Time"] and
-            (u["Distance"] < v["Distance"] or u["Time"] < v["Time"]))
-
+    
+    return (u["Distance"] <= v["Distance"] and u["Time"] <= v["Time"]) and \
+           (u["Distance"] < v["Distance"] or u["Time"] < v["Time"])"""
 
 class AntColony:
 

@@ -70,7 +70,7 @@ mutation_func = select_mutation(mutation_type)"""
 mutation_rate = 0.1  # Adjust as needed
 
 # Other Hyperparameters
-iterations = 10
+iterations = 20
 sourceNode = 440853802
 targetNode = 65316450
 max_mutation_attempts = 1
@@ -84,7 +84,6 @@ max_mutation_attempts = 1
     # Clear Ant path history's for next iteration
     optimiser.history.clear_history()
     # print("Iterations archive contains: ", iterations_best_results)"""
-# Optimization loop
 # Optimization loop
 for i in range(iterations):
     # Run ACO algorithm
