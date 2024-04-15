@@ -1,3 +1,4 @@
+# load necessary libraries
 import pandas as pd
 import networkx as nx
 import random
@@ -137,6 +138,3 @@ for path1, result1 in pareto_front_archive.pareto_archive:
 
 # Plot Pareto front at the end of the loop
 pareto_front_archive.archive_print_results()
-
-# Plot Pareto front at the end of the loop
-plot_pareto_front.plot_pareto_front(pareto_front_archive)
