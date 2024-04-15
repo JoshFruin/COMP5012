@@ -70,7 +70,7 @@ mutation_func = select_mutation(mutation_type)"""
 mutation_rate = 0.1  # Adjust as needed
 
 # Other Hyperparameters
-iterations = 20
+iterations = 10
 sourceNode = 440853802
 targetNode = 65316450
 max_mutation_attempts = 1

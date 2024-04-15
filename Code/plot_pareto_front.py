@@ -28,36 +28,7 @@ def plot_pareto_front(archive):
     plt.xlabel('Distance')
     plt.ylabel('Time')
     plt.title('Pareto Front')
-
-    # Check if the plot represents a Pareto front
-    if is_pareto_front(distances, times):
-        print("The plot represents a Pareto front.")
-    else:
-        print("The plot does not represent a Pareto front.")
-
     plt.show()
 
 
-def is_pareto_front(distances, times):
-    """
-    Check if the given set of distances and times represents a Pareto front.
 
-    Args:
-    - distances (list): List of distance values.
-    - times (list): List of time values.
-
-    Returns:
-    - bool: True if the given set represents a Pareto front, False otherwise.
-    """
-    pareto_front = True
-    for i in range(len(distances)):
-        for j in range(len(distances)):
-            if i != j:
-                # Check if point i dominates point j
-                if distances[i] <= distances[j] and times[i] <= times[j] and (
-                        distances[i] < distances[j] or times[i] < times[j]):
-                    pareto_front = False
-                    break
-        if not pareto_front:
-            break
-    return pareto_front
