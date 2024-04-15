@@ -29,7 +29,7 @@ pareto_front_archive = ParetoArchive()
 iterations_best_results = []
 
 # changeable variables
-iterations = 50
+iterations = 1000
 sourceNode = 290344782
 targetNode = 6848266087
 
@@ -42,7 +42,7 @@ for i in range(iterations):
     iterations_best_results.append(optimiser.get_best_path())
     # Clear Ant path history's for next iteration
     optimiser.history.clear_history()
-    print("Iterations archive contains: ", iterations_best_results)
+    # print("Iterations archive contains: ", iterations_best_results)
 
 print("YAY")
 pareto_front_archive.archive_print_results()

@@ -55,7 +55,7 @@ class MapMaker:
     def calculate_co2_emissions(self, distance_km, speed_limit_kmh):
 
         # Model higher emissions at extremes (simplified quadratic)
-        speed_factor = 1 + 0.1 * (abs(speed_limit_kmh - self.optimal_speed) ** 2)
+        speed_factor = 1 + 0.05 * (abs(speed_limit_kmh - self.optimal_speed) ** 2)
 
         total_emissions = distance_km * self.base_emissions_per_km * speed_factor
 
