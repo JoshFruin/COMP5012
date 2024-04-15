@@ -27,7 +27,7 @@ def dominates(u, v):
 
 class AntColony:
 
-    def __init__(self, graph, num_ants=250, alpha=1, beta=2, evaporation_rate=0.5):
+    def __init__(self, graph, pareto_Archive, num_ants=250, alpha=1, beta=2, evaporation_rate=0.5):
         """
         Initialize the Ant Colony Optimization algorithm.
 
@@ -50,7 +50,7 @@ class AntColony:
         self.distance_weight = 0.3  # the importance of distance vs time, scale: 0-1
         self.time_weight = 0.3
         self.co2_emission_weight = 0.4
-        self.pareto_archive = pareto_archive.ParetoArchive()  # initialise the archive
+        self.pareto_archive = pareto_Archive  # initialise the archive
         self.exploration_rate = 0.1
         self.approx_max_distance_m = 500
         self.approx_max_co2 = 150

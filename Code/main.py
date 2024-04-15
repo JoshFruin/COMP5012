@@ -1,6 +1,7 @@
 # load necessary libraries
 import pandas as pd
 import problem
+import matplotlib.pyplot as plt
 from Code.ant_colony_optimiser import AntColony
 from Code.history import History
 from Code.pareto_archive import ParetoArchive
@@ -22,14 +23,14 @@ my_map.add_edges()
 # create and set objects
 prob = problem.ShortestPathProblem(my_map.network_map)
 history = History()
-optimiser = AntColony(graph=my_map.network_map, num_ants=100)
 pareto_front_archive = ParetoArchive()
+optimiser = AntColony(graph=my_map.network_map, pareto_Archive=pareto_front_archive, num_ants=100)
 
 # stores iterations results
 iterations_best_results = []
 
 # changeable variables
-iterations = 1000
+iterations = 200
 sourceNode = 290344782
 targetNode = 6848266087
 
@@ -46,3 +47,22 @@ for i in range(iterations):
 
 print("YAY")
 pareto_front_archive.archive_print_results()
+
+# create lists for plotting
+archive_time_values = []
+archive_co2_values = []
+
+# iterate through archive, fill the plotting lists
+for _, results in pareto_front_archive.pareto_archive:
+    time_val = results['Time']
+    co2_val = results['Co2_Emission']
+
+    archive_time_values.append(time_val)
+    archive_co2_values.append(co2_val)
+
+# plot the pareto front
+plt.scatter(archive_time_values, archive_co2_values)
+plt.xlabel("Time in seconds")
+plt.ylabel("Co2 emissions")
+plt.title("Pareto Front of Time vs Co2 Emissions")
+plt.show()
