@@ -1,39 +1,70 @@
 # load necessary libraries
 import pandas as pd
-import networkx as nx
 import problem
+import matplotlib.pyplot as plt
+from Code.ant_colony_optimiser import AntColony
+from Code.history import History
+from Code.pareto_archive import ParetoArchive
+from Code.Map import MapMaker
 
 # load san fransisco map data
-nodes_df = pd.read_csv("nodes_l.csv")
-edges_df = pd.read_csv("edges_l.csv")
+nodes_df = pd.read_csv("nodes_tavi.csv")
+edges_df = pd.read_csv("edges_tavi.csv")
 
 # print the data to test
-print(nodes_df)
-print(edges_df)
+print(nodes_df.dtypes)
+print(edges_df.dtypes)
 
-networkMap = nx.Graph()
+# create the networkX map with nodes and edge data
+my_map = MapMaker(nodes_df, edges_df)
+my_map.add_nodes()
+my_map.add_edges()
 
-for index, row in nodes_df.iterrows():
-    networkMap.add_node(
-        row['node_id'],
-        longitude=row['longitude'],
-        latitude=row['latitude'],
-        altitude=row['altitude']
-    )
+# create and set objects
+prob = problem.ShortestPathProblem(my_map.network_map)
+history = History()
+pareto_front_archive = ParetoArchive()
+optimiser = AntColony(graph=my_map.network_map, pareto_Archive=pareto_front_archive, num_ants=100)
 
-for index, row in edges_df.iterrows():
-    networkMap.add_edge(
-        # row['edge_id'],
-        row['source'],  # source node id
-        row['target'],  # target node id
-        length=row['length'],
-        car=row['car'],
-        car_reverse=row['car_reverse'],
-        bike=row['bike'],
-        bike_reverse=row['bike_reverse'],
-        foot=row['foot']
-    )
+# stores iterations results
+iterations_best_results = []
 
-prob = problem.ShortestPathProblem(networkMap)
+# changeable variables
+iterations = 500
+# 290344782
+sourceNode = 290344782
+# 6848266087
+targetNode = 6848266087
 
-prob.displayMap()
+for i in range(iterations):
+
+    # run the optimiser for 1 iteration
+    optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob)
+    print("\n Iteration complete \n")
+    # get the iterations best path results for sexy pareto graph, WARNING DOES NOT WORK
+    iterations_best_results.append(optimiser.get_best_path())
+    # Clear Ant path history's for next iteration
+    optimiser.history.clear_history()
+    # print("Iterations archive contains: ", iterations_best_results)
+
+print("YAY")
+pareto_front_archive.archive_print_results()
+
+# create lists for plotting
+archive_time_values = []
+archive_co2_values = []
+
+# iterate through archive, fill the plotting lists
+for _, results in pareto_front_archive.pareto_archive:
+    time_val = results['Time']
+    co2_val = results['Co2_Emission']
+
+    archive_time_values.append(time_val)
+    archive_co2_values.append(co2_val)
+
+# plot the pareto front
+plt.scatter(archive_time_values, archive_co2_values)
+plt.xlabel("Time in seconds")
+plt.ylabel("Co2 emissions")
+plt.title("Pareto Front of Time vs Co2 Emissions")
+plt.show()
