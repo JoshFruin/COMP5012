@@ -6,7 +6,7 @@ Created on Thu Mar 21 16:21:20 2024
 """
 import random
 import history
-import pareto_archive
+import matplotlib.pyplot as plt
 
 
 # %%
@@ -47,24 +47,35 @@ class AntColony:
         # self.pheromones = {node: {neighbor: 1 for neighbor in graph.neighbors(node)} for node in graph.nodes}
         self.pheromones = self.initialize_pheromones()
         self.history = history.History()  # init the ant paths history
-        self.distance_weight = 0.3  # the importance of distance vs time, scale: 0-1
-        self.time_weight = 0.3
-        self.co2_emission_weight = 0.4
+        self.distance_weight = 0.4  # the importance of distance vs time, scale: 0-1
+        self.time_weight = 0.5
+        self.co2_emission_weight = 0.1
         self.pareto_archive = pareto_Archive  # assign the archive
-        self.exploration_rate = 0.1
+        self.exploration_rate = 0.2
         self.approx_max_distance_m = 500
         self.approx_max_co2 = 150
         self.approx_max_time = 90
+        self.iteration_distances = []
 
-    def run(self, source_node, target_node, problem):
+    def run(self, source_node, target_node, problem, iterations):
 
-        # runs all the ants in the iteration
-        for anti in range(self.num_ants):
-            self.run_ant(source_node, target_node, problem)
-            # print("Complete Ant Cycle \n")
+        for i in range(iterations):
+            # runs all the ants in the iteration
+            for anti in range(self.num_ants):
+                self.run_ant(source_node, target_node, problem)
+                # print("Complete Ant Cycle \n")
 
-        # update all pheromones
-        self.update_Ph()
+            # update all pheromones
+            self.update_Ph()
+            # print pheromones dictionary
+            # print(self.pheromones)
+            # update archive
+            self.get_best_path()
+            # add to the distances list for a graph
+            self.average_distance_graph(iterations)
+            # clear the ant path history
+            self.history.clear_history()
+            print("\n Iteration complete \n")
 
     def initialize_pheromones(self):
         """
@@ -76,7 +87,7 @@ class AntColony:
         pheromones = {}  # Dict that stores pheromone levels as a tuple
         for edge in self.graph.edges:  # Iterates through all edges
             node1, node2 = edge  # Set edge source and target IDs
-            pheromones[(node1, node2)] = 0  # Start edge pheromone with a uniform base value of 1
+            pheromones[(node1, node2)] = 0  # Start edge pheromone with a uniform base value of 0
 
         print("Starting Pheromones initialised")
         return pheromones  # Keep for now, perhaps not needed
@@ -93,7 +104,8 @@ class AntColony:
         """
         neighbors = self.graph.neighbors(ant['current_node'])  # Get current node and look at neighboring nodes
         all_neighbors = [node for node in neighbors]
-        unvisited = [node for node in neighbors if
+        all_valid_neighbors = [node for node in all_neighbors if self.graph.get_edge_data(ant['current_node'], node)['car'] != 0]
+        unvisited = [node for node in all_neighbors if
                      node not in ant['visited']]  # Create list of unvisited potential next neighboring nodes
 
         u_probabilities = {}  # Initialize probability dictionary
@@ -102,8 +114,7 @@ class AntColony:
         if len(unvisited) > 0:
             for node in unvisited:  # Loop through unvisited nodes
 
-                edge_data = self.graph.get_edge_data(ant['current_node'],
-                                                     node)  # Get edge data between current node and
+                edge_data = self.graph.get_edge_data(ant['current_node'], node)  # Get edge data between current node and
                 # print(edge_data)
 
                 # target unvisited node
@@ -152,8 +163,8 @@ class AntColony:
                 next_node = random.choices(nodes, weights=node_weights)[0]
 
         else:
-            next_node = random.choice(all_neighbors)
-
+            # need to make this so that it only
+            next_node = random.choice(all_valid_neighbors)
         return next_node
 
     def run_ant(self, start_node, target_node, problem):
@@ -177,6 +188,7 @@ class AntColony:
 
         # Final Evaluation Here:
         path = ant['visited']  # The complete path taken by the ant, nodes visited
+
         result = problem.evaluate(path)  # Use your ShortestPathProblem class
         self.history.add_solution(path, result)  # add the ant path to the history
 
@@ -233,17 +245,17 @@ class AntColony:
                 # scaled_distance = result['Distance'] / max_distance
                 # scaled_time = result['Time'] / max_time
 
-                # Scale down the distance and time values  Ciaran's code
+                # Scale down the distance and time values
                 normalised_distance = (result['Distance'] - min_distance) / (max_distance - min_distance)
                 normalised_time = (result['Time'] - min_time) / (max_time - min_time)
                 normalised_co2 = (result['Co2_Emission'] - min_co2) / (max_co2 - min_co2)
 
                 # Adjust the scaling factor based on your problem domain, with sf 1 they sit in the 0-2 range
-                scaling_factor = 1
+                scaling_factor = 0.1
 
                 # Update the pheromone level
                 pheromone_level += scaling_factor * (
-                            self.distance_weight * normalised_distance + self.time_weight * normalised_time + self.co2_emission_weight * normalised_co2)
+                        self.distance_weight * normalised_distance + self.time_weight * normalised_time + self.co2_emission_weight * normalised_co2)
 
                 self.pheromones[edge] = pheromone_level
 
@@ -294,6 +306,32 @@ class AntColony:
         return [archived_result[1] for archived_result in self.pareto_archive.pareto_archive]
         # returns all the non dominating solutions of that iteration
 
-    # %%
+    def average_distance_graph(self, iterations):
+        ant_distances = []  # Create a list to store all distances from the current iteration
 
-# %%
+        for _, result in self.history.paths_results_history:
+            distance = result['Distance']  # Extract distance from the result
+            ant_distances.append(distance)
+
+        average_distance = sum(ant_distances) / len(ant_distances)
+        self.iteration_distances.append(average_distance)
+
+        if len(self.iteration_distances) == iterations:
+            plt.scatter(range(len(self.iteration_distances)), self.iteration_distances)
+            plt.xlabel("Iteration")
+            plt.ylabel("Average Path Distance")
+            plt.title("ACO Optimization Progress")
+            plt.show()
+
+    def get_rank(self, result):
+        """
+        Args: Result ([path], [distance, time & co2 emissions])
+        Rank the paths in order of their pareto dominance to feed into the update Ph function that will
+        update the pheromones according to whether the edge is included in a path that highly ranked or vice versa.
+        Higher-ranked paths (less dominated) get a higher quality score.
+        """
+        dominated_count = 0
+        for other_path, other_result in self.history.paths_results_history:
+            if dominates(other_result, result):  # Check if other solution dominates current result
+                dominated_count += 1
+        return dominated_count + 1  # Rank starts from 1 (higher count means more dominated by others)

@@ -8,8 +8,8 @@ from Code.pareto_archive import ParetoArchive
 from Code.Map import MapMaker
 
 # load san fransisco map data
-nodes_df = pd.read_csv("nodes_tavi.csv")
-edges_df = pd.read_csv("edges_tavi.csv")
+nodes_df = pd.read_csv("nodes_test.csv")
+edges_df = pd.read_csv("edges_test.csv")
 
 # print the data to test
 print(nodes_df.dtypes)
@@ -28,23 +28,26 @@ optimiser = AntColony(graph=my_map.network_map, pareto_Archive=pareto_front_arch
 
 # stores iterations results
 iterations_best_results = []
+iteration_distances = []
 
 # changeable variables
-iterations = 500
+iterations = 100
 # 290344782
-sourceNode = 290344782
+sourceNode = 5
 # 6848266087
-targetNode = 6848266087
+targetNode = 90
 
-for i in range(iterations):
+optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob, iterations=iterations)
+
+#for i in range(iterations):
 
     # run the optimiser for 1 iteration
-    optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob)
-    print("\n Iteration complete \n")
+ #   iteration_distances.append(optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob))
+  #  print("\n Iteration complete \n")
     # get the iterations best path results for sexy pareto graph, WARNING DOES NOT WORK
-    iterations_best_results.append(optimiser.get_best_path())
+   # iterations_best_results.append(optimiser.get_best_path())
     # Clear Ant path history's for next iteration
-    optimiser.history.clear_history()
+    #optimiser.history.clear_history()
     # print("Iterations archive contains: ", iterations_best_results)
 
 print("YAY")
