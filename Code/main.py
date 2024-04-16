@@ -30,8 +30,10 @@ optimiser = AntColony(graph=my_map.network_map, pareto_Archive=pareto_front_arch
 iterations_best_results = []
 
 # changeable variables
-iterations = 200
+iterations = 500
+# 290344782
 sourceNode = 290344782
+# 6848266087
 targetNode = 6848266087
 
 for i in range(iterations):
