@@ -28,7 +28,7 @@ def dominates(u, v):
 
 class AntColony:
 
-    def __init__(self, graph, pareto_Archive, num_ants=250, alpha=1, beta=2, evaporation_rate=0.5):
+    def __init__(self, graph, pareto_Archive, num_ants=250, alpha=1, beta=2, evaporation_rate=0.5, mutation_rate=0.1):
         """
         Initialize the Ant Colony Optimization algorithm.
 
@@ -39,6 +39,7 @@ class AntColony:
         - alpha (float): Weight of pheromone in ant decision-making (default is 1).
         - beta (float): Weight of heuristic information in ant decision-making (default is 2).
         - evaporation_rate (float): Rate at which pheromones evaporate (default is 0.5).
+        - mutation_rate (float): Rate of mutation in the population (default is 0.1).
         """
         self.graph = graph
         self.num_ants = num_ants
@@ -57,6 +58,7 @@ class AntColony:
         self.approx_max_co2 = 150
         self.approx_max_time = 90
         self.iteration_distances = []
+        self.mutation_rate = mutation_rate  # Add mutation rate attribute
 
     def run(self, source_node, target_node, problem, iterations):
 
@@ -82,14 +84,10 @@ class AntColony:
 
     def apply_mutation(self):
         """
-        Apply mutation to a subset of paths in the Pareto archive.
+        Apply mutation to a subset of paths in the Pareto archive using Pheromone Trail Mutation.
         """
-        # Define mutation parameters
-        mutation_rate = 0.1  # Adjust as needed
-        mutation_count = int(len(self.pareto_archive.pareto_archive) * mutation_rate)
-
         # Randomly select paths from the archive for mutation
-        paths_to_mutate = random.sample(self.pareto_archive.pareto_archive, mutation_count)
+        paths_to_mutate = random.sample(self.pareto_archive.pareto_archive, int(len(self.pareto_archive.pareto_archive) * self.mutation_rate))
 
         for path, result in paths_to_mutate:
             mutated_path = self.mutate_path(path)
@@ -101,7 +99,7 @@ class AntColony:
 
     def mutate_path(self, path):
         """
-        Mutate a path by randomly swapping two nodes. (random_selection_mutation)
+        Mutate a path using Pheromone Trail Mutation.
 
         Args:
         - path: The path to be mutated.
@@ -112,11 +110,19 @@ class AntColony:
         # Make a copy of the original path
         mutated_path = path[:]
 
-        # Randomly select two different indices in the path
-        idx1, idx2 = random.sample(range(len(path)), 2)
-
-        # Swap the nodes at the selected indices
-        mutated_path[idx1], mutated_path[idx2] = mutated_path[idx2], mutated_path[idx1]
+        for i in range(len(mutated_path)):
+            # Determine whether to mutate the edge based on a random probability
+            if random.random() < self.mutation_rate:
+                # Get the current node and its neighbors
+                current_node = mutated_path[i]
+                neighbors = list(self.graph.neighbors(current_node))
+                # Ensure that the current node is excluded from the list of neighbors
+                if current_node in neighbors:
+                    neighbors.remove(current_node)
+                if neighbors:
+                    # Select a random neighbor to replace the current node
+                    mutated_node = random.choice(neighbors)
+                    mutated_path[i] = mutated_node
 
         return mutated_path
 
