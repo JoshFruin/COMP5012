@@ -33,7 +33,7 @@ iteration_distances = []
 # changeable variables
 iterations = 100
 # 290344782
-sourceNode = 5
+sourceNode = 76
 # 6848266087
 targetNode = 90
 

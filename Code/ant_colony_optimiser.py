@@ -47,15 +47,20 @@ class AntColony:
         # self.pheromones = {node: {neighbor: 1 for neighbor in graph.neighbors(node)} for node in graph.nodes}
         self.pheromones = self.initialize_pheromones()
         self.history = history.History()  # init the ant paths history
-        self.distance_weight = 0.4  # the importance of distance vs time, scale: 0-1
-        self.time_weight = 0.5
+        self.distance_weight = 0.9  # the importance of distance vs time, scale: 0-1
+        self.time_weight = 0.1
         self.co2_emission_weight = 0.1
         self.pareto_archive = pareto_Archive  # assign the archive
-        self.exploration_rate = 0.2
-        self.approx_max_distance_m = 500
-        self.approx_max_co2 = 150
-        self.approx_max_time = 90
+        self.exploration_rate = 0.1
+        self.approx_max_distance_m = 100
+        self.approx_max_co2 = 25
+        self.approx_max_time = 5
+        self.approx_min_distance = 1
+        self.approx_min_time = 0.1
+        self.approx_min_co2 = 9
         self.iteration_distances = []
+        self.iteration_times = []
+        self.iteration_co2_emissions = []
 
     def run(self, source_node, target_node, problem, iterations):
 
@@ -72,7 +77,7 @@ class AntColony:
             # update archive
             self.get_best_path()
             # add to the distances list for a graph
-            self.average_distance_graph(iterations)
+            self.averages(iterations)
             # clear the ant path history
             self.history.clear_history()
             print("\n Iteration complete \n")
@@ -114,7 +119,7 @@ class AntColony:
         if len(unvisited) > 0:
             for node in unvisited:  # Loop through unvisited nodes
 
-                edge_data = self.graph.get_edge_data(ant['current_node'], node)  # Get edge data between current node and
+                edge_data = self.graph.get_edge_data(ant['current_node'], node)  # Get edge data between current and next node
                 # print(edge_data)
 
                 # target unvisited node
@@ -130,13 +135,13 @@ class AntColony:
                     time_h = distance_km / speed_limit if speed_limit > 0 else 0  # Calculate time
                     time_s = time_h * 3600
 
-                    normalised_distance = distance / self.approx_max_distance_m
-                    normalised_co2 = co2_emissions / self.approx_max_co2
-                    normalised_time = time_s / self.approx_max_time
+                    normalised_distance = (distance - self.approx_min_distance) / (self.approx_max_distance_m - self.approx_min_distance)
+                    normalised_time = (time_s - self.approx_min_time) / (self.approx_max_time - self.approx_min_time)
+                    normalised_co2 = (co2_emissions - self.approx_min_co2) / (self.approx_max_co2 - self.approx_min_co2)
 
-                    # Heuristics
-                    heuristic = (self.distance_weight * normalised_distance) + (self.time_weight * normalised_time) + (
-                            self.co2_emission_weight * normalised_co2)  # Create heuristic to guide ants
+                    # calculate heuristic based on inverse normalised attributes and their weights
+                    heuristic = (self.distance_weight * (1 - normalised_distance)) + (self.time_weight * (1 - normalised_time)) + (
+                            self.co2_emission_weight * (1 - normalised_co2))  # Create heuristic to guide ants
 
                     # Pheromone Influence
                     pheromone = self.pheromones.get((ant['current_node'], node), 0)
@@ -306,20 +311,44 @@ class AntColony:
         return [archived_result[1] for archived_result in self.pareto_archive.pareto_archive]
         # returns all the non dominating solutions of that iteration
 
-    def average_distance_graph(self, iterations):
-        ant_distances = []  # Create a list to store all distances from the current iteration
+    def averages(self, iterations):
+
+        # Create a lists to store distance, time and co2 from current iteration
+        ant_distances = []
+        ant_times = []
+        ant_co2 = []
 
         for _, result in self.history.paths_results_history:
             distance = result['Distance']  # Extract distance from the result
+            time = result['Time']
+            co2 = result['Co2_Emission']
             ant_distances.append(distance)
+            ant_times.append(time)
+            ant_co2.append(co2)
 
         average_distance = sum(ant_distances) / len(ant_distances)
+        average_time = sum(ant_times) / len(ant_times)
+        average_co2 = sum(ant_co2) / len(ant_co2)
         self.iteration_distances.append(average_distance)
+        self.iteration_times.append(average_time)
+        self.iteration_co2_emissions.append(average_co2)
 
         if len(self.iteration_distances) == iterations:
             plt.scatter(range(len(self.iteration_distances)), self.iteration_distances)
             plt.xlabel("Iteration")
-            plt.ylabel("Average Path Distance")
+            plt.ylabel("Average Path Distance (m)")
+            plt.title("ACO Optimization Progress")
+            plt.show()
+
+            plt.scatter(range(len(self.iteration_times)), self.iteration_times)
+            plt.xlabel("Iteration")
+            plt.ylabel("Average Path Time (s)")
+            plt.title("ACO Optimization Progress")
+            plt.show()
+
+            plt.scatter(range(len(self.iteration_co2_emissions)), self.iteration_co2_emissions)
+            plt.xlabel("Iteration")
+            plt.ylabel("Average Path Co2 Emissions (g/km)")
             plt.title("ACO Optimization Progress")
             plt.show()
 
