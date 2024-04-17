@@ -7,7 +7,7 @@ Created on Thu Mar 21 16:21:20 2024
 import random
 import history
 import matplotlib.pyplot as plt
-import problem
+from problem import ShortestPathProblem
 
 
 # %%
@@ -93,7 +93,10 @@ class AntColony:
 
         for path, result in paths_to_mutate:
             mutated_path = self.mutate_path(path)
-            mutated_result = problem.evaluate(mutated_path)
+            # Create an instance of ShortestPathProblem
+            problem_instance = ShortestPathProblem(self.graph)
+            # Call the evaluate method on the problem instance
+            mutated_result = problem_instance.evaluate(mutated_path)
             self.pareto_archive.add_result(mutated_path, mutated_result)
 
     def mutate_path(self, path):
