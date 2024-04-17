@@ -2,7 +2,7 @@
 """
 Created on Thu Mar 21 16:21:20 2024
 
-@author: R and J
+@author: R and J with additions by Josh
 """
 import random
 import history
