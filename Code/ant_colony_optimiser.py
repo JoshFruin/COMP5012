@@ -7,6 +7,7 @@ Created on Thu Mar 21 16:21:20 2024
 import random
 import history
 import matplotlib.pyplot as plt
+import problem
 
 
 # %%
@@ -75,7 +76,46 @@ class AntColony:
             self.average_distance_graph(iterations)
             # clear the ant path history
             self.history.clear_history()
+            # Introduce mutation after updating the archive
+            self.apply_mutation()
             print("\n Iteration complete \n")
+
+    def apply_mutation(self):
+        """
+        Apply mutation to a subset of paths in the Pareto archive.
+        """
+        # Define mutation parameters
+        mutation_rate = 0.1  # Adjust as needed
+        mutation_count = int(len(self.pareto_archive.pareto_archive) * mutation_rate)
+
+        # Randomly select paths from the archive for mutation
+        paths_to_mutate = random.sample(self.pareto_archive.pareto_archive, mutation_count)
+
+        for path, result in paths_to_mutate:
+            mutated_path = self.mutate_path(path)
+            mutated_result = problem.evaluate(mutated_path)
+            self.pareto_archive.add_result(mutated_path, mutated_result)
+
+    def mutate_path(self, path):
+        """
+        Mutate a path by randomly swapping two nodes. (random_selection_mutation)
+
+        Args:
+        - path: The path to be mutated.
+
+        Returns:
+        - mutated_path: The mutated path.
+        """
+        # Make a copy of the original path
+        mutated_path = path[:]
+
+        # Randomly select two different indices in the path
+        idx1, idx2 = random.sample(range(len(path)), 2)
+
+        # Swap the nodes at the selected indices
+        mutated_path[idx1], mutated_path[idx2] = mutated_path[idx2], mutated_path[idx1]
+
+        return mutated_path
 
     def initialize_pheromones(self):
         """
