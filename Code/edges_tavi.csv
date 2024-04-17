@@ -1,4 +1,4 @@
-id,source_node_id,target_node_id,length,car,car_reverse,bike,bike_reverse,foot
+edge_id,source_node_id,target_node_id,length,car,car_reverse,bike,bike_reverse,foot
 8474730,290344782,31774001,11,5,5,0,0,0
 25414905,290344587,290344592,4,5,5,0,0,0
 25414906,290344773,290344782,3,5,5,0,0,0

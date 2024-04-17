@@ -2,12 +2,11 @@
 """
 Created on Thu Mar 21 16:21:20 2024
 
-@author: R and J with additions by Josh
+@author: R and J
 """
 import random
 import history
 import matplotlib.pyplot as plt
-from problem import ShortestPathProblem
 
 
 # %%
@@ -28,7 +27,7 @@ def dominates(u, v):
 
 class AntColony:
 
-    def __init__(self, graph, pareto_Archive, num_ants=250, alpha=1, beta=2, evaporation_rate=0.5, mutation_rate=0.1):
+    def __init__(self, graph, pareto_Archive, num_ants=250, alpha=1, beta=2, evaporation_rate=0.5):
         """
         Initialize the Ant Colony Optimization algorithm.
 
@@ -39,7 +38,6 @@ class AntColony:
         - alpha (float): Weight of pheromone in ant decision-making (default is 1).
         - beta (float): Weight of heuristic information in ant decision-making (default is 2).
         - evaporation_rate (float): Rate at which pheromones evaporate (default is 0.5).
-        - mutation_rate (float): Rate of mutation in the population (default is 0.1).
         """
         self.graph = graph
         self.num_ants = num_ants
@@ -58,7 +56,6 @@ class AntColony:
         self.approx_max_co2 = 150
         self.approx_max_time = 90
         self.iteration_distances = []
-        self.mutation_rate = mutation_rate  # Add mutation rate attribute
 
     def run(self, source_node, target_node, problem, iterations):
 
@@ -78,53 +75,7 @@ class AntColony:
             self.average_distance_graph(iterations)
             # clear the ant path history
             self.history.clear_history()
-            # Introduce mutation after updating the archive
-            self.apply_mutation()
             print("\n Iteration complete \n")
-
-    def apply_mutation(self):
-        """
-        Apply mutation to a subset of paths in the Pareto archive using Pheromone Trail Mutation.
-        """
-        # Randomly select paths from the archive for mutation
-        paths_to_mutate = random.sample(self.pareto_archive.pareto_archive, int(len(self.pareto_archive.pareto_archive) * self.mutation_rate))
-
-        for path, result in paths_to_mutate:
-            mutated_path = self.mutate_path(path)
-            # Create an instance of ShortestPathProblem
-            problem_instance = ShortestPathProblem(self.graph)
-            # Call the evaluate method on the problem instance
-            mutated_result = problem_instance.evaluate(mutated_path)
-            self.pareto_archive.add_result(mutated_path, mutated_result)
-
-    def mutate_path(self, path):
-        """
-        Mutate a path using Pheromone Trail Mutation.
-
-        Args:
-        - path: The path to be mutated.
-
-        Returns:
-        - mutated_path: The mutated path.
-        """
-        # Make a copy of the original path
-        mutated_path = path[:]
-
-        for i in range(len(mutated_path)):
-            # Determine whether to mutate the edge based on a random probability
-            if random.random() < self.mutation_rate:
-                # Get the current node and its neighbors
-                current_node = mutated_path[i]
-                neighbors = list(self.graph.neighbors(current_node))
-                # Ensure that the current node is excluded from the list of neighbors
-                if current_node in neighbors:
-                    neighbors.remove(current_node)
-                if neighbors:
-                    # Select a random neighbor to replace the current node
-                    mutated_node = random.choice(neighbors)
-                    mutated_path[i] = mutated_node
-
-        return mutated_path
 
     def initialize_pheromones(self):
         """
