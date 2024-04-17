@@ -47,9 +47,9 @@ class AntColony:
         # self.pheromones = {node: {neighbor: 1 for neighbor in graph.neighbors(node)} for node in graph.nodes}
         self.pheromones = self.initialize_pheromones()
         self.history = history.History()  # init the ant paths history
-        self.distance_weight = 0.9  # the importance of distance vs time, scale: 0-1
+        self.distance_weight = 0.1  # the importance of distance vs time, scale: 0-1
         self.time_weight = 0.1
-        self.co2_emission_weight = 0.1
+        self.co2_emission_weight = 0.9
         self.pareto_archive = pareto_Archive  # assign the archive
         self.exploration_rate = 0.1
         self.approx_max_distance_m = 100
@@ -247,10 +247,6 @@ class AntColony:
                 pheromone_level *= (1 - self.evaporation_rate)
 
                 # Scale down the distance and time values
-                # scaled_distance = result['Distance'] / max_distance
-                # scaled_time = result['Time'] / max_time
-
-                # Scale down the distance and time values
                 normalised_distance = (result['Distance'] - min_distance) / (max_distance - min_distance)
                 normalised_time = (result['Time'] - min_time) / (max_time - min_time)
                 normalised_co2 = (result['Co2_Emission'] - min_co2) / (max_co2 - min_co2)
@@ -283,7 +279,6 @@ class AntColony:
                 # create new list to store results to be removed
                 remove_from_archive = []
 
-                # CHECK WITH REEF
                 # checks if the result dominates anything in the archive
                 for archive_path, archive_result in self.pareto_archive.pareto_archive:
                     if dominates(result_new, archive_result):
@@ -351,16 +346,3 @@ class AntColony:
             plt.ylabel("Average Path Co2 Emissions (g/km)")
             plt.title("ACO Optimization Progress")
             plt.show()
-
-    def get_rank(self, result):
-        """
-        Args: Result ([path], [distance, time & co2 emissions])
-        Rank the paths in order of their pareto dominance to feed into the update Ph function that will
-        update the pheromones according to whether the edge is included in a path that highly ranked or vice versa.
-        Higher-ranked paths (less dominated) get a higher quality score.
-        """
-        dominated_count = 0
-        for other_path, other_result in self.history.paths_results_history:
-            if dominates(other_result, result):  # Check if other solution dominates current result
-                dominated_count += 1
-        return dominated_count + 1  # Rank starts from 1 (higher count means more dominated by others)
