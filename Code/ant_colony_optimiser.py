@@ -44,25 +44,18 @@ class AntColony:
         self.alpha = alpha
         self.beta = beta
         self.evaporation_rate = evaporation_rate
-<<<<<<< HEAD
-        #self.pheromones = {node: {neighbor: 1 for neighbor in graph.neighbors(node)} for node in graph.nodes}
-        self.archive = archive.Archive()  # init the ant paths archive
-        self.distance_weight = 0.5  # the importance of distance vs time, scale: 0-1
-        self.time_weight = 0.5
-        self.pheromones = self.initialize_pheromones(self) # init pheromones based on edge length
-=======
         # self.pheromones = {node: {neighbor: 1 for neighbor in graph.neighbors(node)} for node in graph.nodes}
         self.pheromones = self.initialize_pheromones()
-        self.history = history.History()  # init the ant paths history
+        self.history = History()  # init the ant paths history
         self.distance_weight = 0.3  # the importance of distance vs time, scale: 0-1
         self.time_weight = 0.3
         self.co2_emission_weight = 0.4
-        self.pareto_archive = pareto_Archive  # initialise the archive
+        self.pareto_archive = pareto_Archive  # assign the archive
         self.exploration_rate = 0.1
         self.approx_max_distance_m = 500
         self.approx_max_co2 = 150
         self.approx_max_time = 90
->>>>>>> James-Dev
+
 
     def run(self, source_node, target_node, problem):
 
@@ -74,29 +67,29 @@ class AntColony:
         # update all pheromones
         self.update_Ph()
 
-    #def initialize_pheromones(self):
+    def initialize_pheromones(self):
         """
         Initialize pheromone levels on edges of the graph.
 
         Returns:
         - pheromones (dict): Dictionary storing pheromone levels on edges.
         """
-<<<<<<< HEAD
+
         #pheromones = {}  # Dict that stores pheromone levels as a tuple
         #for edge in self.graph.edges:  # Iterates through all edges
-            u, v = edge  # Set edge source and target IDs
-            pheromones[(u, v)] = 0  # Start edge pheromone with a uniform base value of 1
-=======
+            #u, v = edge  # Set edge source and target IDs
+            #pheromones[(u, v)] = 0  # Start edge pheromone with a uniform base value of 1
+
         pheromones = {}  # Dict that stores pheromone levels as a tuple
         for edge in self.graph.edges:  # Iterates through all edges
             node1, node2 = edge  # Set edge source and target IDs
             pheromones[(node1, node2)] = 0  # Start edge pheromone with a uniform base value of 1
->>>>>>> James-Dev
 
-        #print("Starting Pheromones initialised")
-        #return pheromones  # Keep for now, perhaps not needed
+
+        print("Starting Pheromones initialised")
+        return pheromones  # Keep for now, perhaps not needed
         
-    def initialize_pheromones(self):
+   # def initialize_pheromones(self):
         """
         Initialize pheromone levels on edges of the graph based on edge lengths.
     
@@ -106,11 +99,11 @@ class AntColony:
         Returns:
           - pheromones (dict): Dictionary storing initial pheromone levels on edges.
         """
-        pheromones = {}
-        for u, v, data in self.graph.edges(data=True):
-            length = data.get('length', 1)  # Default to 1 if no length is provided
-            pheromones[(u, v)] = 1 / length  # Set pheromone level inversely proportional to edge length
-        return pheromones
+      #  pheromones = {}
+      #  for u, v, data in self.graph.edges(data=True):
+       #     length = data.get('length', 1)  # Default to 1 if no length is provided
+       #     pheromones[(u, v)] = 1 / length  # Set pheromone level inversely proportional to edge length
+      #  return pheromones
     
 
     def _select_next_node(self, ant, problem):
@@ -279,22 +272,22 @@ class AntColony:
 
                 self.pheromones[edge] = pheromone_level
                
-     def update_Ph(self):
+     #def update_Ph(self):
         
 
         # Rank paths in the archive based on Pareto dominance (higher rank = better)
-        ranked_paths = sorted(self.archive.paths_results_archive, key=lambda x: self.get_rank(x[1]), reverse=True)
+        #ranked_paths = sorted(self.archive.paths_results_archive, key=lambda x: self.get_rank(x[1]), reverse=True)
 
-        for rank, (path, result) in enumerate(ranked_paths):
+        #for rank, (path, result) in enumerate(ranked_paths):
             # Quality based on rank with power function weighting
-            weight = (rank + 1) ** (-alpha)  # alpha controls weighting emphasis # EXPERIMENT w/ alpha
+            #weight = (rank + 1) ** (-alpha)  # alpha controls weighting emphasis # EXPERIMENT w/ alpha
 
-            quality = self.distance_weight * (1 - result['Distance']) + self.time_weight * (1 - result['Time'])  # Can be inside or outside weight function
-            quality *= weight  # Apply weight to quality
+            #quality = self.distance_weight * (1 - result['Distance']) + self.time_weight * (1 - result['Time'])  # Can be inside or outside weight function
+            #quality *= weight  # Apply weight to quality
 
               # update pheromone level using quality
-            pheromone_level += quality
-            self.pheromones[edge] = pheromone_level
+            #pheromone_level += quality
+            #self.pheromones[edge] = pheromone_level
             
     def get_rank(self, result):
         """
