@@ -2,10 +2,10 @@
 import pandas as pd
 import problem
 import matplotlib.pyplot as plt
-from Code.ant_colony_optimiser import AntColony
-from Code.history import History
-from Code.pareto_archive import ParetoArchive
-from Code.Map import MapMaker
+from ant_colony_optimiser import AntColony
+from history import History
+from pareto_archive import ParetoArchive
+from Map import MapMaker
 
 # load san fransisco map data
 nodes_df = pd.read_csv("nodes_test.csv")
@@ -31,7 +31,7 @@ iterations_best_results = []
 iteration_distances = []
 
 # changeable variables
-iterations = 100
+iterations = 150
 # 290344782
 sourceNode = 5
 # 6848266087
@@ -51,6 +51,7 @@ optimiser.run(source_node=sourceNode, target_node=targetNode, problem=prob, iter
     # print("Iterations archive contains: ", iterations_best_results)
 
 print("YAY")
+
 pareto_front_archive.archive_print_results()
 
 # create lists for plotting
