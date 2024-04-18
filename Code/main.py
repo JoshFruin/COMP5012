@@ -7,6 +7,20 @@ from Code.history import History
 from Code.pareto_archive import ParetoArchive
 from Code.Map import MapMaker
 
+
+# -------------------TO LAUREN/ MARKER ------------------------
+# Firstly hello, I hope you're having a lovely day :)
+# If you want to change any of the weights for heuristics, exploration, evaporation
+# this is all in the ant_colony_optimisaiton.py file in the constructor.
+# changing the number of iterations can be done in this main file under the 'changeable variables' comment
+# source and target nodes can also be changed here.
+# to select new source and target nodes please refer to the node ids in the nodes_test.csv, they range from 1-100
+# changing the number of ants can be done in the arguments when the ACO object is created in main, default 100
+# running 1 iteration takes roughly 2 seconds so expect 1000 iterations to take a while to complete
+# Graphs will output after use of the averages for distance, time and co2 along with the pareto front.
+# Thank you for using out ACO!
+#------------------------------------------------------------------
+
 # load san fransisco map data
 nodes_df = pd.read_csv("nodes_test.csv")
 edges_df = pd.read_csv("edges_test.csv")
